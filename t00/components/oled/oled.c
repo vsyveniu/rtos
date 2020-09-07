@@ -1,9 +1,8 @@
 #include "oled.h"
 #include "font6x8.h"
 
-
-int init_oled(){
-
+int32_t init_oled()
+{
 	esp_err_t err;
 	i2c_cmd_handle_t cmd;
 	i2c_config_t i2c_conf = {
@@ -24,7 +23,8 @@ int init_oled(){
 	i2c_master_start(cmd);
 
 	err = i2c_master_write_byte(cmd, (OLED_ADDR << 1) | I2C_MASTER_WRITE, true);
-	if(err != ESP_OK){
+	if(err != ESP_OK)
+	{
 		return (ESP_FAIL);
 
 	}
@@ -64,8 +64,32 @@ int init_oled(){
 		return (ESP_FAIL);
 
 	return (ESP_OK);
-
 }
+
+void reconfigure_oled(int8_t num, ...){
+
+	va_list list;
+	va_start(list, num);
+	i2c_cmd_handle_t cmd;
+	 printf("%s\n", "reconfigure");
+
+	cmd = i2c_cmd_link_create();
+   	i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, (OLED_ADDR << 1) | I2C_MASTER_WRITE, true);
+	i2c_master_write_byte(cmd, 0x00, true); 
+
+	for(int i = 0; i < num; i++)
+	{
+		i2c_master_write_byte(cmd, va_arg(list, int), true);
+    	i2c_master_write_byte(cmd, va_arg(list, int), true);
+	}
+	va_end(list);
+	i2c_master_stop(cmd);
+    i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);   
+	
+}
+
 
 void write_page(uint8_t *data, uint8_t page) {
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -87,7 +111,7 @@ void create_load(uint8_t *arr, char *str, int len, int font_weight){
 	int margin = (128 - strlen(str) * w) / 2;
 	i = margin;
 	for(int k = 0; k < len; k++){
-		start = (str[k] - 32) * 6 + 0;
+		start = (str[k] - 32) * 6;
 		w = font_weight;
 		while (i < 128){
 			if(w == 0){
@@ -167,5 +191,17 @@ void clear_oled(){
         }
     }
 }
+
+void fill_oled(){
+	uint8_t buff[8][128];
+
+ 	for (uint8_t y = 0; y < 8; y++) {
+        for (uint8_t x = 0; x < 128; x++) {
+			  buff[y][x] = 0xFF;
+			  write_page(&buff[y][x], y);
+        }
+    }
+}
+
 
 
