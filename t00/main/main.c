@@ -1,45 +1,52 @@
 #include "main.h"
 
 xSemaphoreHandle mutexSensor;
-static TaskHandle_t receive_from_oled_ready = NULL;
+static TaskHandle_t send_data_to_oled = NULL;
 
-void read_light_sensor(void *param)
+void read_light_sensor(void* param)
 {
     int32_t raw = 0;
+    int32_t prev = 0;
 
     while (true)
     {
-        if (xSemaphoreTake(mutexSensor, 1000 / portTICK_PERIOD_MS))
+        if (xSemaphoreTake(mutexSensor, portMAX_DELAY))
         {
-            adc2_get_raw(ADC2_CHANNEL_7, ADC_WIDTH_12Bit, &raw);
-            xTaskNotify(receive_from_oled_ready, raw, eSetValueWithOverwrite);
-            xSemaphoreGive(mutexSensor);
+            get_photoresistor_value(&raw);
+            if (photoresistor_justify(prev, raw))
+            {
+                xTaskNotify(send_data_to_oled, raw, eSetValueWithOverwrite);
+                prev = raw;
+                xSemaphoreGive(mutexSensor);
+            }
+            else
+            {
+                xTaskNotify(send_data_to_oled, prev, eSetValueWithOverwrite);
+                xSemaphoreGive(mutexSensor);
+            }
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
-void change_brightness(void *param)
+void change_brightness(void* param)
 {
     uint32_t raw = 0;
     static uint32_t prev = 0;
 
     while (true)
     {
-        if (xSemaphoreTake(mutexSensor, 1000 / portTICK_PERIOD_MS))
+        if (xSemaphoreTake(mutexSensor, portMAX_DELAY))
         {
             xTaskNotifyWait(0xffffffff, 0, &raw, portMAX_DELAY);
-            // printf("%d\n", raw);
-            printf("%d conf val \n", raw / 16);
-            printf("%d prev val \n", prev);
             uint32_t val = raw / 16;
-            if ((prev == 0) || (val == 0) || (val == 255) || ((val) > (prev + 20)) || ((val) < (prev - 20)))
+            if (raw != prev)
             {
-                reconfigure_oled(2, 0x81, raw / 16);
+                reconfigure_oled(2, 0x81, val);
                 fill_oled();
                 prev = val;
+                vTaskDelay(500 / portTICK_PERIOD_MS);
             }
-            vTaskDelay(100 / portTICK_PERIOD_MS);
             xSemaphoreGive(mutexSensor);
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -52,11 +59,11 @@ void app_main()
 
     esp_err_t err;
 
-    err = adc2_config_channel_atten(ADC2_CHANNEL_7, ADC_ATTEN_DB_0);
+    err = init_photoresistor();
 
     if (err != ESP_OK)
     {
-        printf("%s\n", "couldn't configure adc2 channel");
+        printf("%s\n", "couldn't configure photoresistor channel");
         esp_restart();
     }
 
@@ -75,5 +82,5 @@ void app_main()
     xTaskCreate(&read_light_sensor, "read light sensor value", 2048, "task 1",
                 1, NULL);
     xTaskCreate(&change_brightness, "change oled brightness", 2048, "task 2", 1,
-                &receive_from_oled_ready);
+                &send_data_to_oled);
 }
