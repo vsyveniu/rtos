@@ -10,11 +10,14 @@
 #include <inttypes.h>
 #include "driver/i2c.h"
 #include "defines.h"
+#include <stdarg.h>
 
 void display_str(char *str, int page, int appear_speed, int font_weight);
 void create_load(uint8_t *arr, char *str, int len, int font_weight);
 void write_page(uint8_t *data, uint8_t page);
-int init_oled();
+int32_t init_oled();
 void clear_oled();
+void fill_oled();
+void reconfigure_oled(int8_t num, ...);
 
 #endif
