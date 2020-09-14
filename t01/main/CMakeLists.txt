@@ -1,4 +1,4 @@
 idf_component_register(SRCS "main.c"
                        INCLUDE_DIRS "include"
-                        REQUIRES defines blinker
+                        REQUIRES defines console
                       )
