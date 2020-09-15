@@ -13,10 +13,9 @@
 #include "freertos/semphr.h"
 #include "defines.h"
 #include "driver/uart.h"
-#include <stdio.h>
-#include <string.h>
 #include "esp_system.h"
 #include "esp_console.h"
+#include "commands.h"
 
 
 #endif
