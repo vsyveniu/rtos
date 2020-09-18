@@ -4,6 +4,8 @@ int cmd_handle(int argc, char** argv)
 {
     printf("%s\n", "command handle fuck");
 
+    
+
     gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
     gpio_set_level(LED_1, 1);
 

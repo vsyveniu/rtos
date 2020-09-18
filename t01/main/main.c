@@ -48,10 +48,15 @@ void cmd_instance_task(void *pvParams)
 
     char* prompt = "> ";
     int ret;
+    int crutch = 1;
 
     while (true){
         if(xSemaphoreTake( mutexInput, 20 / portTICK_RATE_MS) == pdTRUE) {
-
+                if(crutch)
+                {
+                    //linenoiseClearScreen();
+                    crutch = 0;
+                }
                ret = 0;
                 while (true)
                 {
@@ -64,6 +69,7 @@ void cmd_instance_task(void *pvParams)
                    /*  if (strlen(line) > 0) {
                         linenoiseHistoryAdd(line);
                     } */
+                    //esp_console_split_argv(line, **argv, 3);
                     esp_console_run(line, &ret);
                     if(ret == 24)
                     {
@@ -75,6 +81,7 @@ void cmd_instance_task(void *pvParams)
                     //linenoiseHistorySave(HISTORY_PATH);
                     linenoiseFree(line);
                 }
+                crutch = 1;
         }
     }
    
@@ -142,12 +149,15 @@ void app_main(void)
 {
     //initialize_nvs();
     //initialize_filesystem();
-       //fflush(stdout);
+    //_GLOBAL_REENT->_stdin = fopen("/dev/uart/1", "r");
+     //_GLOBAL_REENT->_stdout = fopen("/dev/uart/1", "w");
+
+    fflush(stdout);
     fsync(fileno(stdout));
-   setvbuf(stdout, NULL, _IONBF, 0);
+
     setvbuf(stdin, NULL, _IONBF, 0); 
 
-    //vTaskDelay(2000 / portTICK_PERIOD_MS);
+   // vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     esp_console_config_t console_conf = {
         .max_cmdline_length = 42,
@@ -164,7 +174,7 @@ void app_main(void)
         .help = "fucking help",
         .hint = "fucking hint",
         .func = &cmd_handle,
-        .argtable = NULL,
+        .argtable = "arg_int",
     };
 
     esp_console_cmd_t cmd_exit_conf = {
@@ -185,7 +195,7 @@ void app_main(void)
     };
 
     ESP_ERROR_CHECK(uart_param_config(UART_NUMBER, &uart_config));
-       uart_set_pin(UART_NUMBER, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE); 
+       uart_set_pin(UART_NUMBER, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     ESP_ERROR_CHECK(
         uart_driver_install(UART_NUMBER, 1024, 0, 20, &uart0_queue, 0)); 
        
@@ -207,7 +217,7 @@ void app_main(void)
     esp_console_cmd_register(&esp_comm);
     esp_console_cmd_register(&cmd_exit_conf);
 
-        //linenoiseClearScreen();
+    //linenoiseClearScreen();
   //  linenoiseSetMultiLine(1);
     linenoiseAllowEmpty(false);
 /* 
@@ -230,7 +240,7 @@ void app_main(void)
             break;
         }
 
-        //  printf("%s\n", "osdofsdof");
+          printf("%s\n", "osdofsdof");
         printf("\n%s\n", line);
         esp_console_run(line, &ret);
         linenoiseFree(line);
@@ -240,15 +250,13 @@ void app_main(void)
    // ESP_ERROR_CHECK(esp_console_new_repl_uart(&repl_uart_conf, &repl_conf, repl));
 
      //ESP_ERROR_CHECK(esp_console_start_repl(&repl));
-     //_GLOBAL_REENT->_stdin = fopen("/dev/uart/1", "r");
-     //_GLOBAL_REENT->_stdout = fopen("/dev/uart/1", "w");
-
+     
 
     TaskHandle_t xcmdHandle = NULL;
     inputQueue = xQueueCreate(256, sizeof(int8_t));
     mutexInput = xSemaphoreCreateBinary();
     mutexCrutch = xSemaphoreCreateMutex();
-    fflush(stdout);
     xTaskCreate(cmd_instance_task, "cmd_instance_task", 2048, NULL, 1, &xcmdHandle);
-    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled);  
+    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled); 
+    printf("%s\n", "Type any shit to enter a REPL"); 
 }

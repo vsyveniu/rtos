@@ -9,7 +9,7 @@
 #define LEDC_DUTY_RESOLUTION	LEDC_TIMER_10_BIT
 #define LEDC_FREQENCY			(1000)
 #define UART_NUMBER             UART_NUM_0
-#define UART_TX_PIN             1
-#define UART_RX_PIN             3
+#define UART_TX_PIN             17
+#define UART_RX_PIN             16
 
 #endif
