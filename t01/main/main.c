@@ -39,35 +39,49 @@ void uart_event_task(void *pvParams){
             printf("%s\n", "get notificaation");
              //uint8_t *buff = (uint8_t *) malloc(1);
             // uint8_t buff[256];
-             uint8_t buff[3];
-             memset(buff, 0, 3);
+             uint8_t buff[256];
+             memset(buff, 0, 8);
              char *str;
+             char clear[256];
              str = (char *)malloc(sizeof(char) * 256);
-             memset(str, 0, 256);
+             memset(str, '\0', 256);
              int i = 0;
+             int j = 0;
              int ret = 0;
              size_t len = 0;
              int rxlen;      
             while (true)
             {
-                rxlen = uart_read_bytes(UART_NUM_1, buff, 3, 20 / portTICK_RATE_MS);
+                rxlen = uart_read_bytes(UART_NUM_1, buff, 256, 20 / portTICK_RATE_MS);
                 len = uart_get_buffered_data_len(UART_NUMBER, &len);
 
-                    if(buff[0] == 97){
-                        vTaskSuspend( NULL );
-                        break;    
-                    }
-                    else if(rxlen == 3){
+    
+                     if((rxlen == 3 || rxlen == 6) && buff[0] == 27){
                         printf("%s\n", "fuck");
                         printf("%d\n", rxlen);
                         printf("%d\n", buff[0]);
                         printf("%d\n", buff[1]);
                         printf("%d\n", buff[2]);
-                    /*  if(buff[2] == 68 || buff[2] == 67)
-                        { */
+
+                         printf("\n%d rx_buff len\n", rxlen);
+                        printf("\n%d len\n", len); 
+                      if(buff[2] == 68 && i > 0)
+                        { 
                             uart_write_bytes(UART_NUM_1, buff, 3);
-                            i--;
-                    // }
+                            if(i > 0)
+                                i--;
+                            printf("\n%d i\n", i); 
+                        }
+                        if(buff[2] == 67 && i < strlen(str))
+                        { 
+                            uart_write_bytes(UART_NUM_1, buff, 3);
+                            i++;
+                            printf("\n%d i\n", i); 
+                        }
+                        /* if(buff[2] == 65 || buff[2] == 66)
+                        { 
+                            uart_write_bytes(UART_NUM_1, buff, 3);
+                        } */
                     }
                     else if(buff[0] == 13){
                         printf("%s\n", str);
@@ -78,35 +92,70 @@ void uart_event_task(void *pvParams){
                         break;     
                     }
                     else if (rxlen > 0){ 
-                        if( buff[0] == 127 && i > 0)
+                      /*   if( buff[0] == 127)
                         {
-                            uart_write_bytes(UART_NUM_1, buff, 1);
+                            uart_write_bytes(UART_NUMBER, buff, 3);
+                            //uart_write_bytes(UART_NUMBER, "\r", 1);
+                           // uart_write_bytes(UART_NUMBER, str, 256);
+                            i--;
                             str[i] = 0;
                             str[i - 1] = 0;
-                            i--;
-                            printf("\n%d i\n", i);
-                        }
-                        else if(buff[0] != 127)
+                            printf("\n%d rtrtrtbi\n", i);
+                            
+                        } */
+                        if(buff[0] != 127)
                         {
-                            uart_write_bytes(UART_NUM_1, buff, 1);
-                            str[i] = buff[0];
-                            i++;
+                            /* if((rxlen - (256 + strlen(str))) > 0){
+                                uart_write_bytes(UART_NUMBER, buff, rxlen - (256 + i));
+                            } */
+                            j = 0;
+                            if(rxlen + strlen(str) > 255 && strlen(str) < 255)
+                            {
+                                printf("%s\n", "bitch");
+                                uart_write_bytes(UART_NUMBER, buff, 255 - strlen(str));
+                                while(i < 255)
+                                {
+                                    str[i] = buff[j];
+                                    i++;
+                                    j++;
+                                }
+                                
+                            }
+                            else if(i < 255)
+                            {
+                                printf("%s\n", "BITCH");
+                                uart_write_bytes(UART_NUMBER, buff, rxlen);
+                                while (j < rxlen)
+                                {
+                                    str[i] = buff[j];
+                                    i++;
+                                    j++;
+                                  
+                                }
+                                //str[i] = '\0';
+                            }
+                            //
+                            
+                           // uart_write_bytes(UART_NUMBER, "\r", 1);
+                            //uart_write_bytes(UART_NUMBER, str, strlen(str));
+                    
                         }
                         
 
-                        printf("%d\n", buff[0]);
+                         printf("%d\n", buff[0]);
                         printf("\n%d rx_buff len\n", rxlen);
-                        printf("\n%d rx_len\n", len);
+                        printf("\n%d i\n", i); 
+                        printf("\n%s \n", str);
+
                         
                         if(ret == 24)
                         {
                             printf("%s\n", "Type any shit to enter a REPL again");
-                            //free(buff);
+                            free(buff);
                             vTaskSuspend( NULL );
                             break;
                         }
-                    } 
-
+                    }
                 vTaskDelay(20 / portTICK_PERIOD_MS);
             
 
