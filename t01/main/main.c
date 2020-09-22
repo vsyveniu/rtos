@@ -12,6 +12,11 @@ xSemaphoreHandle mutexInput;
 xSemaphoreHandle mutexCrutch;
 static TaskHandle_t send_data_to_oled = NULL;
 
+        struct arg_lit *f;
+        struct arg_str *on, *off, *pulse;
+        struct arg_int *scal;
+        struct arg_end *end;
+
 
 void uart_event_task(void *pvParams){
 
@@ -28,6 +33,10 @@ void uart_event_task(void *pvParams){
    
 }
 
+void uart_print_str(int uart_num, char *str){
+    uart_write_bytes(uart_num, str, strlen(str));
+}
+
  void cmd_instance_task(void *pvParams){
      char *prompt = "> ";
 
@@ -36,13 +45,12 @@ void uart_event_task(void *pvParams){
             uart_write_bytes(UART_NUMBER, prompt, strlen(prompt));
             //xTaskNotifyWait(0xffffffff, 0, 0, portMAX_DELAY);
             //uart_enable_rx_intr(UART_NUM_0);
-            printf("%s\n", "get notificaation");
+            printf("%s\n", "start loop");
              //uint8_t *buff = (uint8_t *) malloc(1);
             // uint8_t buff[256];
              uint8_t buff[256];
              memset(buff, 0, 8);
              char *str;
-             char clear[256];
              str = (char *)malloc(sizeof(char) * 256);
              memset(str, '\0', 256);
              int i = 0;
@@ -84,11 +92,28 @@ void uart_event_task(void *pvParams){
                         } */
                     }
                     else if(buff[0] == 13){
-                        printf("%s\n", str);
+                        printf("not parsed %s\n", str);
+                      /*    char **argv;
+                        int argc = 0;
+                        argc = esp_console_split_argv(str, argv, 5);
+                        printf(" argc %d\n", argc);
+                        while (argc > 0){
+                            printf("argvs   %s \n", *argv);
+                            argc--;
+                            argv++;
+                        }
+                        printf("parsed %s\n", str); */
                         esp_console_run(str, &ret);
                         memset(str, 0, 256);
                         free(str);
+                        if(ret == 24)
+                        {
+                            uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL again\n\r");
+                            vTaskSuspend( NULL );
+                            break;
+                        }
                         uart_write_bytes(UART_NUMBER, "\n\r", 2);
+     
                         break;     
                     }
                     else if (rxlen > 0){ 
@@ -147,14 +172,6 @@ void uart_event_task(void *pvParams){
                         printf("\n%d i\n", i); 
                         printf("\n%s \n", str);
 
-                        
-                        if(ret == 24)
-                        {
-                            printf("%s\n", "Type any shit to enter a REPL again");
-                            free(buff);
-                            vTaskSuspend( NULL );
-                            break;
-                        }
                     }
                 vTaskDelay(20 / portTICK_PERIOD_MS);
             
@@ -172,8 +189,8 @@ void app_main(void)
 {
  
     esp_console_config_t console_conf = {
-        .max_cmdline_length = 42,
-        .max_cmdline_args = 5,
+        .max_cmdline_length = 256,
+        .max_cmdline_args = 12,
         .hint_color = 37,
         .hint_bold = 1,
     };
@@ -181,12 +198,22 @@ void app_main(void)
 
     esp_console_init(&console_conf);
 
+        void *argtable[] = {
+            on = arg_strn("on", NULL, "string", 0, 1, "the -a option"),
+            off = arg_strn("off", NULL, "string", 0, 1, "the -b option"),
+            pulse = arg_strn("pulse", NULL, "string", 0, 1, "the -c option"),
+            scal = arg_intn("1", NULL, "scalar", 0, 1, "foo value"),
+            end = arg_end(20),
+
+    };
+
+
     esp_console_cmd_t esp_comm = {
-        .command = "fuck",
+        .command = "led",
         .help = "fucking help",
         .hint = "fucking hint",
         .func = &cmd_handle,
-        .argtable = "arg_int",
+       // .argtable = argtable,
     };
 
     esp_console_cmd_t cmd_exit_conf = {
@@ -240,5 +267,6 @@ void app_main(void)
     mutexInput = xSemaphoreCreateBinary();
     mutexCrutch = xSemaphoreCreateMutex();
     xTaskCreate(cmd_instance_task, "cmd_instance_task", 2048, NULL, 1, &xcmdHandle);
-    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled); 
+    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled);
+    uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r"); 
 }
