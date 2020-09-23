@@ -10,12 +10,18 @@
 #include "esp_log.h"
 #include <string.h>
 #include <stdio.h>
+#include "driver/ledc.h"
 #include "freertos/semphr.h"
 #include "defines.h"
 #include "driver/uart.h"
 #include "esp_system.h"
 #include "esp_console.h"
 #include "commands.h"
+#include "uart_utils_funcs.h"
+#define LEDC_SPEED_MODE 		LEDC_HIGH_SPEED_MODE
+#define LEDC_DUTY  				(1023)
+#define LEDC_DUTY_RESOLUTION	LEDC_TIMER_10_BIT
+#define LEDC_FREQENCY			(1000)
 
 
 #endif

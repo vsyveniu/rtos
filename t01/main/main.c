@@ -33,9 +33,9 @@ void uart_event_task(void *pvParams){
    
 }
 
-void uart_print_str(int uart_num, char *str){
+/* void uart_print_str(int uart_num, char *str){
     uart_write_bytes(uart_num, str, strlen(str));
-}
+} */
 
  void cmd_instance_task(void *pvParams){
      char *prompt = "> ";
@@ -104,6 +104,7 @@ void uart_print_str(int uart_num, char *str){
                         }
                         printf("parsed %s\n", str); */
                         esp_console_run(str, &ret);
+                        printf("ret after command %d\n", ret);
                         memset(str, 0, 256);
                         free(str);
                         if(ret == 24)
@@ -177,6 +178,7 @@ void uart_print_str(int uart_num, char *str){
             
 
             }
+            
             //uart_enable_rx_intr(UART_NUM_0);
          //   xSemaphoreGive(mutexInput); 
         }
@@ -233,6 +235,27 @@ void app_main(void)
 
     };
 
+    ledc_timer_config_t ledc_timer = {
+ 		.speed_mode = LEDC_SPEED_MODE,
+ 		.timer_num = LEDC_TIMER_1,
+ 		.duty_resolution = LEDC_DUTY_RESOLUTION,
+ 		.freq_hz = LEDC_FREQENCY,
+ 	};
+
+	ledc_timer_config(&ledc_timer);		
+
+	ledc_channel_config_t ledc_channel = {
+		.channel = LEDC_CHANNEL_0,
+		.speed_mode = LEDC_SPEED_MODE,
+		.gpio_num = LED_1,
+		.duty = 0,
+		.timer_sel = LEDC_TIMER_1,
+		.hpoint = 0,
+	};
+
+	ledc_channel_config(&ledc_channel);
+	ledc_fade_func_install(0);
+
     ESP_ERROR_CHECK(uart_param_config(UART_NUMBER, &uart_config));
        uart_set_pin(UART_NUMBER, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     ESP_ERROR_CHECK(
@@ -268,5 +291,7 @@ void app_main(void)
     mutexCrutch = xSemaphoreCreateMutex();
     xTaskCreate(cmd_instance_task, "cmd_instance_task", 2048, NULL, 1, &xcmdHandle);
     xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled);
-    uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r"); 
+    uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r");
+
+
 }
