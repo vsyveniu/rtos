@@ -1,20 +1,36 @@
 #include "blinker.h"
 
-void pulse_led(){
+/* void led_on(int led_num)
+{
+	gpio_set_direction(led_num, GPIO_MODE_OUTPUT);
+    gpio_set_level(led_num, 1);
+}
 
-	int volt;
+void led_off(int led_num)
+{
+    gpio_set_level(led_num, 0);
+} */
 
-	dac_output_enable(DAC_CHANNEL_2);
+void ledc_channel_setup(ledc_timer_t timer_num, int32_t frequency, ledc_channel_t channel, int gpio){
+	
+	ledc_timer_config_t ledc_timer = {
+ 		.speed_mode = LEDC_SPEED_MODE,
+ 		.timer_num = timer_num,
+ 		.duty_resolution = LEDC_DUTY_RESOLUTION,
+ 		.freq_hz = frequency,
+ 	};
 
-	for (volt = 0; volt  < 255; volt++)
-	{
-		dac_output_voltage(DAC_CHANNEL_2, volt);
-		ets_delay_us(8000);
-	}
+	ledc_timer_config(&ledc_timer);		
 
-	for (volt = 255; volt  > 0; volt--)
-	{
-		dac_output_voltage(DAC_CHANNEL_2, volt);
-		ets_delay_us(8000);
-	}		 
+	ledc_channel_config_t ledc_channel = {
+		.channel = channel,
+		.speed_mode = LEDC_SPEED_MODE,
+		.gpio_num = gpio,
+		.duty = 0,
+		.timer_sel = timer_num,
+		.hpoint = 0,
+	};
+
+	ledc_channel_config(&ledc_channel);
+	 ledc_fade_func_install(0);
 }

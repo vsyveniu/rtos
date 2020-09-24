@@ -4,6 +4,9 @@
 struct arg_lit *first, *second, *third, *all;
 struct arg_int *freq;
 struct arg_end *end;
+static TaskHandle_t pulse_led1_handle = NULL;
+static TaskHandle_t pulse_led2_handle = NULL;
+static TaskHandle_t pulse_led3_handle = NULL;
 
 void handle_led_on(){
 
@@ -31,30 +34,192 @@ void handle_led_on(){
 
 void handle_led_off(){
 
+printf("%s\n", "runtime");
       if(first->count == 1)
       {
+        if(pulse_led1_handle)
+        {
+          vTaskDelete(pulse_led1_handle);
+          pulse_led1_handle = NULL;
+        }
+        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_1, 0);
+        
       }
       if(second->count == 1)
       {
+        printf("%s\n", "feck");
+        if(pulse_led2_handle)
+        {
+          vTaskDelete(pulse_led2_handle);
+          pulse_led2_handle = NULL;
+        }
+        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_2, 0);
+        
       }
       if(third->count == 1)
       {
+        
+        if(pulse_led3_handle)
+        {
+          vTaskDelete(pulse_led3_handle);
+          pulse_led3_handle = NULL;
+        }
+        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_3, 0);
       }
+
       if(all->count == 1)
       {
+        if(pulse_led1_handle)
+        {
+          vTaskDelete(pulse_led1_handle);
+          pulse_led1_handle = NULL;
+        }
+        if(pulse_led2_handle)
+        {
+          vTaskDelete(pulse_led2_handle);
+          pulse_led2_handle = NULL;
+        }
+        if(pulse_led3_handle)
+        {
+          vTaskDelete(pulse_led3_handle);
+          pulse_led3_handle = NULL;
+        }
+        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
+        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
+        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_1, 0);
         gpio_set_level(LED_2, 0);
         gpio_set_level(LED_3, 0);
       }
 }
 
-void handle_led_pulse(){
-  printf("%s\n", "feck");
-  xTaskNotify(send_data_to_oled, )
+/* void led_pulse_task(void *pvParams){
 
+    ledc_timer_t timer_num = 0;
+    uint16_t frequency = 0;
+    ledc_channel_t channel = 0;
+    int gpio = 0; 
+
+  if(first->count == 1){
+    timer_num = 1;
+    frequency = 1000;
+    channel = LEDC_CHANNEL_0;
+    gpio = LED_1;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);  
+  }
+  if(second->count == 1){
+    timer_num = 2;
+    frequency = 1000;
+    channel = LEDC_CHANNEL_1;
+    gpio = LED_2;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);  
+  }
+  if(third->count == 1){
+    timer_num = 3;
+    frequency = 1000;
+    channel = LEDC_CHANNEL_2;
+    gpio = LED_3;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);  
+  }
+  ledc_fade_func_install(0);
+    while (true){
+      printf("%s\n", "BITCH!!");
+        ledc_set_fade_with_time(LEDC_SPEED_MODE, channel, LEDC_DUTY, 2000);
+        ledc_fade_start(LEDC_SPEED_MODE, channel, LEDC_FADE_WAIT_DONE);
+        ledc_set_fade_with_time(LEDC_SPEED_MODE, channel, 0, 2000);
+        ledc_fade_start(LEDC_SPEED_MODE, channel, LEDC_FADE_WAIT_DONE);
+    }
+
+} */
+
+void led1_pulse_task(void *pvParams){
+    while (true){
+      printf("%s\n", "BITCH!!1111");
+ 
+         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_0, LEDC_DUTY, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_0, 0, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+
+}
+
+void led2_pulse_task(void *pvParams){
+    while (true){
+      printf("%s\n", "BITCH!!222");
+
+         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_1, LEDC_DUTY, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_1, 0, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS); 
+    }
+
+}
+
+void led3_pulse_task(void *pvParams){
+    while (true){
+      printf("%s\n", "BITCH!!333");
+
+         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_2, LEDC_DUTY, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_2, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_2, 0, 1000);
+        ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_2, LEDC_FADE_WAIT_DONE);
+        vTaskDelay(100 / portTICK_PERIOD_MS); 
+    }
+
+}
+
+
+void handle_led_pulse(){
+
+  ledc_timer_t timer_num = 0;
+  int32_t frequency = 0;
+  ledc_channel_t channel = 0;
+  int gpio = 0; 
+  frequency = 1000;
+
+  printf("freq %d\n", *freq->ival);
+
+  if(*freq->ival){
+    frequency = *freq->ival;
+  }
+ 
+  if(first->count == 1){
+    timer_num = 1;
+    channel = LEDC_CHANNEL_0;
+    gpio = LED_1;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);
+    xTaskCreate(led1_pulse_task, "led1_pulse_task", 2048, NULL, 1, &pulse_led1_handle);  
+  }
+  if(second->count == 1){
+    timer_num = 2;
+    channel = LEDC_CHANNEL_1;
+    gpio = LED_2;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);
+    xTaskCreatePinnedToCore(led2_pulse_task, "led2_pulse_task", 2048, NULL, 1, &pulse_led2_handle, 1);  
+  }
+  if(third->count == 1){
+    timer_num = 3;
+    channel = LEDC_CHANNEL_2;
+    gpio = LED_3;  
+
+    ledc_channel_setup(timer_num, frequency, channel, gpio);
+    xTaskCreatePinnedToCore(led3_pulse_task, "led3_pulse_task", 2048, NULL, 1, &pulse_led3_handle, 1);  
+  }
+  
 }
 
 
@@ -129,6 +294,7 @@ int cmd_handle(int argc, char** argv)
                 second = arg_litn("2", NULL, 0, 1, "the -b option"),
                 third = arg_litn("3", NULL, 0, 1, "the -b option"),
                 all = arg_litn("a", "all", 0, 1, "the -b option"),
+                freq = arg_int1("f", "freq", "<n>", "the -b option"),
                 end = arg_end(20),
 
           };
@@ -145,7 +311,6 @@ int cmd_handle(int argc, char** argv)
           uart_print_str(UART_NUMBER, "\n\rYou have to specify arguments!\n");
           return 0;
         }
-        printf("%s\n", "here");
         handle_led_pulse();
 
          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));

@@ -33,37 +33,48 @@ void uart_event_task(void *pvParams){
    
 }
 
+
+
 /* void uart_print_str(int uart_num, char *str){
     uart_write_bytes(uart_num, str, strlen(str));
 } */
 
  void cmd_instance_task(void *pvParams){
      char *prompt = "> ";
+     
+                     uint8_t buff[256];
+             memset(buff, 0, 256);
+            char str[256];
+             //str = (char *)malloc(sizeof(char) * 256);
+             memset(str, '\0', 256);
+               int i = 0;
+             int j = 0;
+             int ret = 0;
+             size_t len = 0;
+             int is_first = 1;
 
     while (true){
         if(xSemaphoreTake(mutexInput, portMAX_DELAY)) {
-            uart_write_bytes(UART_NUMBER, prompt, strlen(prompt));
+            if (is_first)
+            {
+              uart_write_bytes(UART_NUMBER, prompt, strlen(prompt));
+               is_first = 0;     
+            }
+          //  
             //xTaskNotifyWait(0xffffffff, 0, 0, portMAX_DELAY);
             //uart_enable_rx_intr(UART_NUM_0);
             printf("%s\n", "start loop");
              //uint8_t *buff = (uint8_t *) malloc(1);
             // uint8_t buff[256];
-             uint8_t buff[256];
-             memset(buff, 0, 8);
-             char *str;
-             str = (char *)malloc(sizeof(char) * 256);
-             memset(str, '\0', 256);
-             int i = 0;
-             int j = 0;
-             int ret = 0;
-             size_t len = 0;
-             int rxlen;      
-            while (true)
-            {
-                rxlen = uart_read_bytes(UART_NUM_1, buff, 256, 20 / portTICK_RATE_MS);
-                len = uart_get_buffered_data_len(UART_NUMBER, &len);
 
-    
+
+           
+             int rxlen;
+             ret = 0;      
+            //while (true)
+            //{
+                rxlen = uart_read_bytes(UART_NUM_1, buff, 256, 20 / portTICK_RATE_MS);
+               // len = uart_get_buffered_data_len(UART_NUMBER, &len);
                      if((rxlen == 3 || rxlen == 6) && buff[0] == 27){
                         printf("%s\n", "fuck");
                         printf("%d\n", rxlen);
@@ -101,21 +112,27 @@ void uart_event_task(void *pvParams){
                             printf("argvs   %s \n", *argv);
                             argc--;
                             argv++;
-                        }
-                        printf("parsed %s\n", str); */
+                        }*/
+                        printf("parsed %s\n", str); 
                         esp_console_run(str, &ret);
                         printf("ret after command %d\n", ret);
-                        memset(str, 0, 256);
-                        free(str);
+                        memset(str, '\0', 256);
+                        memset(buff, 0, 256);
+                        i = 0;
+            
+                       // free(str);
+                        uart_write_bytes(UART_NUMBER, "\n\r", 2);
+                        uart_write_bytes(UART_NUMBER, prompt, strlen(prompt));
                         if(ret == 24)
                         {
+                            is_first = 1;
                             uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL again\n\r");
                             vTaskSuspend( NULL );
-                            break;
+                            ///break;
                         }
-                        uart_write_bytes(UART_NUMBER, "\n\r", 2);
+                       
      
-                        break;     
+    //                    break;     
                     }
                     else if (rxlen > 0){ 
                       /*   if( buff[0] == 127)
@@ -168,20 +185,24 @@ void uart_event_task(void *pvParams){
                         }
                         
 
-                         printf("%d\n", buff[0]);
+                        printf("%d\n", buff[0]);
                         printf("\n%d rx_buff len\n", rxlen);
                         printf("\n%d i\n", i); 
+                        printf("\n%d strlen\n", strlen(str)); 
                         printf("\n%s \n", str);
 
+
                     }
-                vTaskDelay(20 / portTICK_PERIOD_MS);
+                    memset(buff, 0, 256);
+                //vTaskDelay(50 / portTICK_PERIOD_MS);
             
 
-            }
+          //  }
             
             //uart_enable_rx_intr(UART_NUM_0);
          //   xSemaphoreGive(mutexInput); 
         }
+        vTaskDelay(20 / portTICK_PERIOD_MS);
     }
    
 } 
@@ -235,27 +256,6 @@ void app_main(void)
 
     };
 
-    ledc_timer_config_t ledc_timer = {
- 		.speed_mode = LEDC_SPEED_MODE,
- 		.timer_num = LEDC_TIMER_1,
- 		.duty_resolution = LEDC_DUTY_RESOLUTION,
- 		.freq_hz = LEDC_FREQENCY,
- 	};
-
-	ledc_timer_config(&ledc_timer);		
-
-	ledc_channel_config_t ledc_channel = {
-		.channel = LEDC_CHANNEL_0,
-		.speed_mode = LEDC_SPEED_MODE,
-		.gpio_num = LED_1,
-		.duty = 0,
-		.timer_sel = LEDC_TIMER_1,
-		.hpoint = 0,
-	};
-
-	ledc_channel_config(&ledc_channel);
-	ledc_fade_func_install(0);
-
     ESP_ERROR_CHECK(uart_param_config(UART_NUMBER, &uart_config));
        uart_set_pin(UART_NUMBER, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     ESP_ERROR_CHECK(
@@ -289,8 +289,9 @@ void app_main(void)
     inputQueue = xQueueCreate(256, sizeof(int8_t));
     mutexInput = xSemaphoreCreateBinary();
     mutexCrutch = xSemaphoreCreateMutex();
-    xTaskCreate(cmd_instance_task, "cmd_instance_task", 2048, NULL, 1, &xcmdHandle);
+    xTaskCreate(cmd_instance_task, "cmd_instance_task", 4096, NULL, 1, &xcmdHandle);
     xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled);
+    //vTaskSuspend(pulseHandle);
     uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r");
 
 

@@ -1,6 +1,9 @@
 #ifndef DEFINES_H
 # define DEFINES_H
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
 #define LED_1 27
 #define LED_2 26
 #define LED_3 33
