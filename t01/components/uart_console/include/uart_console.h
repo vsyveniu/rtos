@@ -1,5 +1,5 @@
-#ifndef COMMANDS_H
-# define COMMANDS_H
+#ifndef UART_CONSOLE_H
+# define UART_CONSOLE_H
 
 #include <stdio.h>
 #include <string.h>
@@ -9,13 +9,15 @@
 #include "driver/gpio.h"
 #include "esp_console.h"
 #include "esp_err.h"
+#include "driver/uart.h"
+#include "freertos/semphr.h"
 #include "uart_utils_funcs.h"
-#include "driver/ledc.h"
+#include "commands.h"
 #include "defines.h"
-#include "blinker.h"
 
 
-int     cmd_handle(int argc, char **argv);
-int     cmd_exit();
+void uart_event_task(void *pvParams);
+void cmd_instance_task(void *pvParams);
+void uart_console_init();
 
 #endif

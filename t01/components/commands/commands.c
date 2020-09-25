@@ -110,10 +110,11 @@ void handle_led_off()
       }
 }
 
-
 void led1_pulse_task(void *pvParams){
+
     while (true)
     {
+       
         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_0, LEDC_DUTY, 1000);
         ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -127,6 +128,7 @@ void led1_pulse_task(void *pvParams){
 void led2_pulse_task(void *pvParams){
     while (true)
     {
+     
         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_1, LEDC_DUTY, 1000);
         ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_1, LEDC_FADE_NO_WAIT);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -140,6 +142,7 @@ void led2_pulse_task(void *pvParams){
 void led3_pulse_task(void *pvParams){
     while (true)
     {
+     
         ledc_set_fade_with_time(LEDC_SPEED_MODE, LEDC_CHANNEL_2, LEDC_DUTY, 1000);
         ledc_fade_start(LEDC_SPEED_MODE, LEDC_CHANNEL_2, LEDC_FADE_NO_WAIT);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -150,7 +153,6 @@ void led3_pulse_task(void *pvParams){
 
 }
 
-
 void handle_led_pulse(){
 
   ledc_timer_t timer_num = 0;
@@ -158,12 +160,9 @@ void handle_led_pulse(){
   ledc_channel_t channel = 0;
   int gpio = 0; 
 
-  printf("freq %d\n", *freq->ival);
-
   if(*freq->ival){
     frequency = *freq->ival;
   }
- printf("freqency %d\n", frequency);
 
   if(first->count == 1){
     if(led1_on == 1)
@@ -217,8 +216,7 @@ void handle_led_pulse(){
 
 int cmd_handle(int argc, char** argv)
 {
-  int nerrors;
-
+      int nerrors = 0;
 
       if(argv[1] && !strcmp(argv[1], "on"))
       {
@@ -227,16 +225,19 @@ int cmd_handle(int argc, char** argv)
                 second = arg_litn("2", NULL, 0, 1, "the -b option"),
                 third = arg_litn("3", NULL, 0, 1, "the -b option"),
                 end = arg_end(20),
-
           };
         nerrors = arg_parse(argc,argv,argtable);
-        if(nerrors > 1){
+        if(nerrors > 1)
+        {
           uart_print_str(UART_NUMBER, "\n\rarguments line error\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
-        else if(nerrors == 1 && !first->count && !second->count && !third->count && !all->count)
+        else if(nerrors == 1 && !first->count && !second->count && !third->count)
         {
+         
           uart_print_str(UART_NUMBER, "\n\rYou have to specify arguments!\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
 
@@ -259,11 +260,13 @@ int cmd_handle(int argc, char** argv)
         nerrors = arg_parse(argc,argv,argtable);
         if(nerrors > 1){
           uart_print_str(UART_NUMBER, "\n\rarguments line error\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
         else if(nerrors == 1 && !first->count && !second->count && !third->count && !all->count)
         {
           uart_print_str(UART_NUMBER, "\n\rYou have to specify arguments!\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
 
@@ -274,7 +277,6 @@ int cmd_handle(int argc, char** argv)
          return 0;
 
       }
-
       if(argv[1] && !strcmp(argv[1], "pulse"))
       {
           void *argtable[] = {
@@ -290,14 +292,14 @@ int cmd_handle(int argc, char** argv)
         nerrors = arg_parse(argc,argv,argtable);
         
         if(nerrors > 1){
-          
           uart_print_str(UART_NUMBER, "\n\rarguments line error\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
         else if(nerrors == 1 && !first->count && !second->count && !third->count && !all->count)
         {
-          
           uart_print_str(UART_NUMBER, "\n\rYou have to specify arguments!\n");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }
         
@@ -315,8 +317,8 @@ int cmd_handle(int argc, char** argv)
          return 0;
 
       }
-    uart_print_str(UART_NUMBER, "\n\rUnrecognixed command\n");
-    return 0;
+    uart_print_str(UART_NUMBER, "\n\rCommand not found. Try to type not such a crap like this time");
+  return 0;
 }
 
 int cmd_exit()

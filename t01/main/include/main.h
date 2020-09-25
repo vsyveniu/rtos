@@ -17,6 +17,7 @@
 #include "esp_console.h"
 #include "commands.h"
 #include "uart_utils_funcs.h"
+#include "uart_console.h"
 #include "defines.h"
 #define LEDC_SPEED_MODE 		LEDC_HIGH_SPEED_MODE
 #define LEDC_DUTY  				(1023)
