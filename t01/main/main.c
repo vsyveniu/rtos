@@ -6,17 +6,12 @@
 #include "esp_vfs_fat.h"
 #include "esp_log.h"
 
-xQueueHandle inputQueue;
 static QueueHandle_t uart0_queue;
 xSemaphoreHandle mutexInput;
-xSemaphoreHandle mutexCrutch;
-static TaskHandle_t send_data_to_oled = NULL;
-
-        struct arg_lit *f;
-        struct arg_str *on, *off, *pulse;
-        struct arg_int *scal;
-        struct arg_end *end;
-
+struct arg_lit *f;
+struct arg_str *on, *off, *pulse;
+struct arg_int *scal;
+struct arg_end *end;
 
 void uart_event_task(void *pvParams){
 
@@ -128,11 +123,7 @@ void uart_event_task(void *pvParams){
                             is_first = 1;
                             uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL again\n\r");
                             vTaskSuspend( NULL );
-                            ///break;
-                        }
-                       
-     
-    //                    break;     
+                        }  
                     }
                     else if (rxlen > 0){ 
                       /*   if( buff[0] == 127)
@@ -148,9 +139,6 @@ void uart_event_task(void *pvParams){
                         } */
                         if(buff[0] != 127)
                         {
-                            /* if((rxlen - (256 + strlen(str))) > 0){
-                                uart_write_bytes(UART_NUMBER, buff, rxlen - (256 + i));
-                            } */
                             j = 0;
                             if(rxlen + strlen(str) > 255 && strlen(str) < 255)
                             {
@@ -175,42 +163,18 @@ void uart_event_task(void *pvParams){
                                     j++;
                                   
                                 }
-                                //str[i] = '\0';
                             }
-                            //
-                            
-                           // uart_write_bytes(UART_NUMBER, "\r", 1);
-                            //uart_write_bytes(UART_NUMBER, str, strlen(str));
-                    
                         }
-                        
-
-                        printf("%d\n", buff[0]);
-                        printf("\n%d rx_buff len\n", rxlen);
-                        printf("\n%d i\n", i); 
-                        printf("\n%d strlen\n", strlen(str)); 
-                        printf("\n%s \n", str);
-
-
                     }
                     memset(buff, 0, 256);
-                //vTaskDelay(50 / portTICK_PERIOD_MS);
-            
-
-          //  }
-            
-            //uart_enable_rx_intr(UART_NUM_0);
-         //   xSemaphoreGive(mutexInput); 
         }
         vTaskDelay(20 / portTICK_PERIOD_MS);
     }
    
 } 
 
-
 void app_main(void)
 {
- 
     esp_console_config_t console_conf = {
         .max_cmdline_length = 256,
         .max_cmdline_args = 12,
@@ -218,25 +182,13 @@ void app_main(void)
         .hint_bold = 1,
     };
 
-
     esp_console_init(&console_conf);
-
-        void *argtable[] = {
-            on = arg_strn("on", NULL, "string", 0, 1, "the -a option"),
-            off = arg_strn("off", NULL, "string", 0, 1, "the -b option"),
-            pulse = arg_strn("pulse", NULL, "string", 0, 1, "the -c option"),
-            scal = arg_intn("1", NULL, "scalar", 0, 1, "foo value"),
-            end = arg_end(20),
-
-    };
-
 
     esp_console_cmd_t esp_comm = {
         .command = "led",
         .help = "fucking help",
         .hint = "fucking hint",
         .func = &cmd_handle,
-       // .argtable = argtable,
     };
 
     esp_console_cmd_t cmd_exit_conf = {
@@ -260,39 +212,14 @@ void app_main(void)
        uart_set_pin(UART_NUMBER, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     ESP_ERROR_CHECK(
         uart_driver_install(UART_NUMBER, 1024, 0, 20, &uart0_queue, 0)); 
-       
-    esp_vfs_dev_uart_use_driver(UART_NUMBER);
 
-    /* Minicom, screen, idf_monitor send CR when ENTER key is pressed */
-     esp_vfs_dev_uart_port_set_rx_line_endings(UART_NUMBER,
-     ESP_LINE_ENDINGS_CR);
-    /* Move the caret to the beginning of the next line on '\n' */
-    esp_vfs_dev_uart_port_set_tx_line_endings(UART_NUMBER,
-                                              ESP_LINE_ENDINGS_CRLF); 
-    
- /* 
-    int probe_status = linenoiseProbe();
-        if (probe_status) {
-            linenoiseSetDumbMode(1);
-        } 
- */
     esp_console_cmd_register(&esp_comm);
     esp_console_cmd_register(&cmd_exit_conf);
-
-
-   // ESP_ERROR_CHECK(esp_console_new_repl_uart(&repl_uart_conf, &repl_conf, repl));
-
-     //ESP_ERROR_CHECK(esp_console_start_repl(&repl));
-     
 
     TaskHandle_t xcmdHandle = NULL;
     inputQueue = xQueueCreate(256, sizeof(int8_t));
     mutexInput = xSemaphoreCreateBinary();
-    mutexCrutch = xSemaphoreCreateMutex();
-    xTaskCreate(cmd_instance_task, "cmd_instance_task", 4096, NULL, 1, &xcmdHandle);
-    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 1, &send_data_to_oled);
-    //vTaskSuspend(pulseHandle);
+    xTaskCreate(cmd_instance_task, "cmd_instance_task", 4096, NULL, 2, &xcmdHandle);
+    xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 2, &send_data_to_oled);
     uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r");
-
-
 }

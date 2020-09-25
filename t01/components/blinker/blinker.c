@@ -32,5 +32,5 @@ void ledc_channel_setup(ledc_timer_t timer_num, int32_t frequency, ledc_channel_
 	};
 
 	ledc_channel_config(&ledc_channel);
-	 ledc_fade_func_install(0);
+	ledc_fade_func_install(0);
 }
