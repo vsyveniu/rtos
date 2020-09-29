@@ -20,10 +20,4 @@
 #include "dht11.h"
 #include "defines.h"
 
-typedef struct dht_data_struct {
-    uint8_t   temperature;
-    uint8_t   humidity;
-    uint8_t  timestamp;
-} dht_data_s;
-
 #endif

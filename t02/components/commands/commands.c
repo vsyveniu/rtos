@@ -9,10 +9,60 @@ struct arg_int *freq = NULL;
 struct arg_end *end = NULL;
 
 
+void dht_log_print()
+{
+/*     int i = 0;
+    while(dht_log[i].temperature != 0 && dht_log[i].humidity != 0)
+    {
+      i++;
+    } */
+     int i = 1;
+     double stored_time = 0;
+    double time_replace = 0;
+
+      
+      
+
+      double time = 0;
+      double fresh_item_time = 0;
+      timer_get_counter_time_sec(TIMER_GROUP_0, 1, &time);
+      timer_get_counter_time_sec(TIMER_GROUP_0, 0, &fresh_item_time);
+
+      printf("%f\n", time_diff);
+
+       dht_log[0].timestamp = fresh_item_time;
+      while (i < 60){
+         
+                    if(dht_log[i].timestamp != 0){
+
+                        dht_log[i].timestamp += time;
+                    }
+                    i++;
+                } 
+
+    time_diff = 0;
+    timer_set_counter_value(TIMER_GROUP_0, 1, 0);
+ 
+
+    for(int j = 0; j < 60; j++)
+    {
+     // printf("temp %d\n", dht_log[j].temperature);
+      printf("temp %d hum %d time ago %f\n", dht_log[j].temperature, dht_log[j].humidity, dht_log[j].timestamp);
+    }
+
+    printf("%s\n", "feck");
+
+}
+
+
 int cmd_dhtlog(int argc, char** argv)
 {
     if(argc > 1){
-      uart_print_str(UART_NUMBER, "\n\rYou have to specify arguments!\n");
+      uart_print_str(UART_NUMBER, "\n\rCommand have no arguments!\n");
+      return 0;
+    }
+    else{
+      dht_log_print();
     }
       /* int nerrors = 0;
 
