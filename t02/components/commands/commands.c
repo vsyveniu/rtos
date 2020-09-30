@@ -16,7 +16,7 @@ void dht_log_print()
     {
       i++;
     } */
-     int i = 1;
+     int i = 0;
      double stored_time = 0;
     double time_replace = 0;
 
@@ -28,9 +28,10 @@ void dht_log_print()
       timer_get_counter_time_sec(TIMER_GROUP_0, 1, &time);
       timer_get_counter_time_sec(TIMER_GROUP_0, 0, &fresh_item_time);
 
-      printf("%f\n", time_diff);
+/*       printf("comm %f\n", time);
 
-       dht_log[0].timestamp = fresh_item_time;
+        dht_log[0].timestamp = fresh_item_time;
+       i = 1;
       while (i < 60){
          
                     if(dht_log[i].timestamp != 0){
@@ -40,14 +41,20 @@ void dht_log_print()
                     i++;
                 } 
 
-    time_diff = 0;
-    timer_set_counter_value(TIMER_GROUP_0, 1, 0);
- 
+    time_diff = 0; */
+    int hours = 0;
+    int minutes = 0;
+    int seconds = 0;
 
-    for(int j = 0; j < 60; j++)
+
+ 
+    for(int j = 0; j < 60; j++) 
     {
      // printf("temp %d\n", dht_log[j].temperature);
-      printf("temp %d hum %d time ago %f\n", dht_log[j].temperature, dht_log[j].humidity, dht_log[j].timestamp);
+         hours = (int)(time - dht_log[j].timestamp) / 3600;
+         minutes = (int)(time - dht_log[j].timestamp) / 60;
+         seconds = (int)(time - dht_log[j].timestamp) - (3600 * hours) - (minutes * 60));
+      printf("temp %d hum %d     %d hours %d minutes %d seconds ago\n", dht_log[j].temperature, dht_log[j].humidity, hours, minutes, seconds);
     }
 
     printf("%s\n", "feck");

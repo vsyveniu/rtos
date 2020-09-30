@@ -110,7 +110,7 @@ void x_task_buffer_push()
                         dht_data_curr->humidity = dht_log[j].humidity;
                         dht_data_curr->timestamp = dht_log[j].timestamp;
                         
-                        dht_log[j].temperature =  dht_data_replace->temperature;
+                        dht_log[j].temperature = dht_data_replace->temperature;
                         dht_log[j].humidity = dht_data_replace->humidity;
                         dht_log[j].timestamp = dht_data_replace->timestamp;
                         
@@ -119,24 +119,23 @@ void x_task_buffer_push()
                         dht_data_replace->timestamp = dht_data_curr->timestamp; 
                     }
 
-                    int i = 2;
-                        while (i < 60){
-                            
-                            if(dht_log[i].timestamp != 0){
-
-                                dht_log[i].timestamp += common_time;
-                            }
-                        i++;
-                     } 
-                     timer_set_counter_value(TIMER_GROUP_0, 1, 0);
-
                     dht_log[0].temperature = dht_data_receive->temperature;
                     dht_log[0].humidity = dht_data_receive->humidity;
-                    dht_log[0].timestamp = last_item_time;
+                    dht_log[0].timestamp = common_time;
+                    printf("%f\n", common_time);
+                    printf("l tile %f\n", last_item_time);
+                   // if((int)common_time == 5){
+/*                      
+      
+                            for(int i = 2; i < 60; i++)
+                            {
+                                if(dht_log[i].timestamp != 0){
 
+                                    dht_log[i].timestamp += common_time;
+                                }
+                            } */
                     timer_set_counter_value(TIMER_GROUP_0, 0, 0);
 
-                    
                 }
                  xSemaphoreGive(mutexSensor);
             } 
