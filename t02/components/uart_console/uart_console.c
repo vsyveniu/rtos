@@ -70,7 +70,7 @@ void uart_event_task(void *pvParams){
               i = 0;
               uart_write_bytes(UART_NUMBER, "\n\r", 2);
               uart_write_bytes(UART_NUMBER, prompt, strlen(prompt));
-              if(ret == 24)
+              if(ret == 1)
               {
                 is_first = 1;
                 uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL again\n\r");
