@@ -24,7 +24,7 @@ void dht_log_print()
       if(dht_log[i].temperature != 0 || dht_log[i].humidity != 0)
       {
         hours = (int)(time - dht_log[i].timestamp) / 3600;
-        minutes = (int)(time - dht_log[i].timestamp) / 60;
+        minutes = ((int)(time - dht_log[i].timestamp) - (3600 * hours)) / 60;
         seconds = (int)(time - dht_log[i].timestamp) - (3600 * hours) - (minutes * 60);
 
         sprintf(str, "\n\rTemperature: %dС Humidity: %d%%     %d hours  %d  minutes  %d seconds ago",  dht_log[i].temperature, dht_log[i].humidity, hours, minutes, seconds);
