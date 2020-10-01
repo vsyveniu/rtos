@@ -7,7 +7,6 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "esp_err.h"
-#include "esp_log.h"
 #include <string.h>
 #include <stdio.h>
 #include "driver/ledc.h"
@@ -18,11 +17,7 @@
 #include "commands.h"
 #include "uart_utils_funcs.h"
 #include "uart_console.h"
+#include "dht11.h"
 #include "defines.h"
-#define LEDC_SPEED_MODE 		LEDC_HIGH_SPEED_MODE
-#define LEDC_DUTY  				(1023)
-#define LEDC_DUTY_RESOLUTION	LEDC_TIMER_10_BIT
-#define LEDC_FREQENCY			(1000)
-
 
 #endif
