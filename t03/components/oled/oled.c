@@ -3,6 +3,9 @@
 
 int32_t init_oled()
 {
+    gpio_set_direction(EN_OLED, GPIO_MODE_OUTPUT);
+	gpio_set_level(EN_OLED, 1);
+
     esp_err_t err;
     i2c_cmd_handle_t cmd;
     i2c_config_t i2c_conf = {

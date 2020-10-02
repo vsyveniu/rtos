@@ -13,7 +13,7 @@
 #define I2C_SDA GPIO_NUM_21
 #define I2C_SCL GPIO_NUM_22
 #define OLED_ADDR 0x3c
-#define TIMER_DIVIDER         16
+#define TIMER_DIVIDER         80
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)
 
 static TaskHandle_t notify_time_change = NULL;

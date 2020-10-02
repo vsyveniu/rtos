@@ -17,6 +17,7 @@
 #include "commands.h"
 #include "uart_utils_funcs.h"
 #include "uart_console.h"
+#include "oled.h"
 #include "defines.h"
 
 #endif
