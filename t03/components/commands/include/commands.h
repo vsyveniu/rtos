@@ -11,6 +11,7 @@
 #include "esp_err.h"
 #include "uart_utils_funcs.h"
 #include "driver/ledc.h"
+#include "timer_utils.h"
 #include "defines.h"
 
 int     cmd_time(int argc, char **argv);

@@ -3,33 +3,27 @@
 #include "driver/periph_ctrl.h"
 #include "soc/timer_group_struct.h"
 
+static TaskHandle_t notify_time_change = NULL;
 
 void x_task_oled_time()
 {
     uint8_t hours = 0;
     uint8_t minutes = 0;
-    uint seconds = 0;
     uint8_t seconds_show = 0;
     uint32_t time_val = 0;
-    char str[15];
-    char secs[5];
-    char mins[5];
-    char hors[5];
-    memset(str, 0, 15);
-    memset(secs, 0, 5);
-    memset(mins, 0, 5);
-    memset(hors, 0, 5);
+    char *str;
 
     while (true)
     {
         xTaskNotifyWait(0xffffffff, 0, &time_val, portMAX_DELAY);
-        //printf("%d\n", time_val);
 
        if(time_val == 86400)
        {
            hours = 0;
            minutes = 0;
            seconds_show = 0;
+           timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+           timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  1 * TIMER_SCALE);
        }
        else
        {
@@ -37,30 +31,9 @@ void x_task_oled_time()
             minutes = (time_val - (3600 * hours)) / 60;
             seconds_show = time_val - (3600 * hours) - (minutes * 60);
        }
-        if(seconds_show < 10)
-        {
-            sprintf(secs, "0%u", seconds_show);
-        }
-        else{
-            sprintf(secs, "%u", seconds_show);
-        }
-        if(minutes < 10)
-        {
-            sprintf(mins, "0%u", minutes);
-        }
-        else{
-            sprintf(mins, "%u", minutes);
-        }
-        if(hours < 10)
-        {
-            sprintf(hors, "0%u", hours);
-        }
-        else{
-            sprintf(hors, "%u", hours);
-        }
-        //sprintf(str, "%u:%u:0%u", hours, minutes, seconds_show);
-        sprintf(str, "%s:%s:%s", hors, mins, secs);
-        display_str(str, 3, 0, 7);
+       str = make_time_str(hours, minutes, seconds_show);
+       display_str(str, 3, 0, 7);
+       free(str);
     }
 }
 
@@ -99,7 +72,7 @@ void app_main(void)
     timer_config_t clock_timer_conf = {
 		.counter_en = false,
 		.counter_dir = TIMER_COUNT_UP,
-        // .alarm_en = TIMER_ALARM_EN,
+        .alarm_en = TIMER_ALARM_EN,
         .intr_type = TIMER_INTR_LEVEL,
 		.auto_reload = false,
 		.divider = TIMER_DIVIDER,
@@ -110,13 +83,21 @@ void app_main(void)
     {
         printf("%s\n", "couldn't initiate timer");
     }
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+   // timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
 
-    timer_set_alarm(TIMER_GROUP_0, TIMER_0, TIMER_ALARM_EN);
+    //timer_set_alarm(TIMER_GROUP_0, TIMER_0, TIMER_ALARM_EN);
 
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1 * TIMER_SCALE);
+    err = timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1 * TIMER_SCALE);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't set timer alarm");
+    }
 
-      timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+    err = timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't enable timer interrupt");
+    }
 
     err = timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_intr_handle, (void *)0, ESP_INTR_FLAG_IRAM, NULL);
     if(err != ESP_OK)
@@ -130,7 +111,6 @@ void app_main(void)
     }
     clear_oled();
  
-    //xTaskCreate(x_task_update_time, "get dht data task", 2048, NULL, 1, NULL);
     xTaskCreate(x_task_oled_time, "push dht data tostatic buffer", 4096, NULL, 1, &notify_time_change);
 
     timer_start(TIMER_GROUP_0, TIMER_0);

@@ -16,7 +16,4 @@
 #define TIMER_DIVIDER         80
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)
 
-static TaskHandle_t notify_time_change = NULL;
-BaseType_t *pxHigherPriorityTaskWoken;
-
 #endif

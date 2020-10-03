@@ -7,25 +7,21 @@ struct arg_end *end = NULL;
 
 void handle_cmd_time()
 {
-  int hours = 0;
-  int minutes = 0;
-  int seconds = 0;
+  uint64_t hours = 0;
+  uint64_t minutes = 0;
+  uint64_t seconds = 0;
+  uint64_t timer_val = 0;
 
-  char *tock;
-  char str[8];
-  char *ps;
-  ps = str;
-
-  strcpy(str, *val->sval);
   hours = atoi(*val->sval);
   *val->sval+=3;
   minutes = atoi(*val->sval);
   *val->sval+=3;
   seconds = atoi(*val->sval);
-  //printf("%s\n", *val->sval);
-  printf("%d\n", hours);
-  printf("%d\n", minutes);
-  printf("%d\n", seconds);
+
+  timer_val = ((hours * 3600) + minutes * 60 + seconds) * 1000000;
+
+  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, timer_val);
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  timer_val + ( 1 * TIMER_SCALE));
 
 }
 
@@ -35,12 +31,10 @@ int cmd_time(int argc, char** argv)
 
         void *argtable[] = {
               val = arg_rex1("val", "value", "(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)", "<n>", 0, "the regular expression option"),
-              //val = arg_rex1("val", "value", "[0-5]", "<rex>", 0, "the regular expression option"),
               end = arg_end(20),
         };
 
         nerrors = arg_parse(argc,argv,argtable);
-        printf(" errs %d\n", nerrors);
         if(nerrors > 0)
         {
           uart_print_str(UART_NUMBER, "\n\rarguments line error\n");
