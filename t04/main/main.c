@@ -28,7 +28,7 @@ void app_main(void)
     i2s_set_sample_rates(i2s_num, 22050);
 
  
-      esp_vfs_spiffs_conf_t config = {
+/*       esp_vfs_spiffs_conf_t config = {
         .base_path = "/spiffs",
         .partition_label = "storage",
         .max_files = 1,
@@ -73,7 +73,7 @@ void app_main(void)
       fclose(file);
 
       printf("%d\n", strlen(buffer));
-    }
+    } */
  
 
 }
