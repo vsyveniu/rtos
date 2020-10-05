@@ -7,57 +7,53 @@
 
 static TaskHandle_t notify_time_change = NULL;
 
-void x_task_oled_time()
+
+xSemaphoreHandle mutexSensor;
+
+void x_task_dht()
 {
-    uint8_t hours = 0;
-    uint8_t minutes = 0;
-    uint8_t seconds_show = 0;
-    uint32_t time_val = 0;
-    char *str;
+    uint8_t dht_buff[5];
+    memset(dht_buff, 0, 5);
+    dht_data_s dht_data[1];
 
     while (true)
     {
-        xTaskNotifyWait(0xffffffff, 0, &time_val, portMAX_DELAY);
+        get_DHT_data(dht_buff);
+        dht_data->temperature =  dht_buff[2];
+        dht_data->humidity =  dht_buff[0];
+        xQueueSend(dht_queue, &dht_data, 10);
 
-       if(time_val == 86400)
-       {
-           hours = 0;
-           minutes = 0;
-           seconds_show = 0;
-           timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
-           timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  1 * TIMER_SCALE);
-       }
-       else
-       {
-            hours = (time_val) / 3600;
-            minutes = (time_val - (3600 * hours)) / 60;
-            seconds_show = time_val - (3600 * hours) - (minutes * 60);
-       }
-       str = make_time_str(hours, minutes, seconds_show);
-       display_str(str, 3, 0, 7);
-       free(str);
+        vTaskDelay(5000 / portTICK_PERIOD_MS); 
+
     }
 }
 
-void IRAM_ATTR timer_intr_handle(void *param)
+void x_task_buffer_push()
 {
-    timer_spinlock_take(TIMER_GROUP_0);
-    timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, 0);
+    dht_data_s dht_data_receive[1];
 
-    uint64_t timer_val = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, TIMER_0);
-    uint64_t next_alarm = timer_val + ( 1 * TIMER_SCALE);
-
-    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, TIMER_0, next_alarm);
-    timer_group_enable_alarm_in_isr(TIMER_GROUP_0, 0);
-
-    xTaskNotifyFromISR(notify_time_change, timer_val / 1000000, eSetValueWithOverwrite, 0);
-    timer_spinlock_give(TIMER_GROUP_0);
+    while (true)
+    {
+        if(xQueueReceive(dht_queue, &dht_data_receive, 10))
+        {
+            if(dht_log[0].temperature != dht_data_receive->temperature || dht_log[0].humidity != dht_data_receive->humidity)
+            {
+                dht_log[0].temperature = dht_data_receive->temperature;
+                dht_log[0].humidity = dht_data_receive->humidity;
+            }
+        }
+    }
 }
-
 
 void app_main(void)
 {
     esp_err_t err;
+
+    gpio_set_direction(DHT_POWER, GPIO_MODE_OUTPUT);	
+	gpio_set_level(DHT_POWER, 1);
+    gpio_set_direction(EN_OLED, GPIO_MODE_OUTPUT);
+	gpio_set_level(EN_OLED, 1);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     err = uart_console_init();
     if(err != ESP_OK){
@@ -65,11 +61,11 @@ void app_main(void)
         esp_restart();
     }
     esp_console_cmd_t cmd_led_on_conf = {
-        .command = "ledon",
+        .command = "led-on",
         .func = &cmd_ledon,
     };
      esp_console_cmd_t cmd_led_off_conf = {
-        .command = "ledoff",
+        .command = "led-off",
         .func = &cmd_ledoff,
     };
     esp_console_cmd_t cmd_exit_conf = {
@@ -80,7 +76,7 @@ void app_main(void)
     esp_console_cmd_register(&cmd_led_on_conf);
     esp_console_cmd_register(&cmd_led_off_conf);
     esp_console_cmd_register(&cmd_exit_conf);
-
+/* 
     struct timeval current_time;
 
     sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
@@ -92,5 +88,19 @@ void app_main(void)
         current_time.tv_sec, current_time.tv_usec);
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+    } */
+
+    err = init_oled();
+    if(err != ESP_OK){
+        printf("%s\n", "couldn't initiate oled");
     }
+    fill_oled();
+    clear_oled();
+
+
+    dht_queue = xQueueCreate( 1, sizeof( dht_data_s) );
+
+    xTaskCreate(x_task_dht, "get dht data task", 2048, NULL, 1, NULL);
+    xTaskCreate(x_task_buffer_push, "push dht data tostatic buffer", 2048, NULL, 1, NULL);
+
 }

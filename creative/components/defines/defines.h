@@ -21,4 +21,12 @@
 #define TIMER_DIVIDER           80
 #define TIMER_SCALE             (TIMER_BASE_CLK / TIMER_DIVIDER)
 
+typedef struct dht_data_struct {
+    uint8_t   temperature;
+    uint8_t   humidity;
+} dht_data_s;
+
+QueueHandle_t dht_queue;
+dht_data_s dht_log[1];
+
 #endif
