@@ -32,7 +32,9 @@ void x_task_oled_time()
             seconds_show = time_val - (3600 * hours) - (minutes * 60);
        }
        str = make_time_str(hours, minutes, seconds_show);
-       display_str(str, 3, 0, 7);
+       if(display_str_fat_row_2(str, 0, 8, 3, 2)){
+           printf("%s\n", "string is too big");
+       }
        free(str);
     }
 }
@@ -83,9 +85,6 @@ void app_main(void)
     {
         printf("%s\n", "couldn't initiate timer");
     }
-   // timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
-
-    //timer_set_alarm(TIMER_GROUP_0, TIMER_0, TIMER_ALARM_EN);
 
     err = timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1 * TIMER_SCALE);
     if(err != ESP_OK)
@@ -112,6 +111,13 @@ void app_main(void)
     clear_oled();
  
     xTaskCreate(x_task_oled_time, "push dht data tostatic buffer", 4096, NULL, 1, &notify_time_change);
+
+    char *str;
+    str = make_time_str(0, 0, 0);
+       if(display_str_fat_row_2(str, 0, 8, 3, 2)){
+           printf("%s\n", "string is too big");
+       }
+    free(str);
 
     timer_start(TIMER_GROUP_0, TIMER_0);
 }
