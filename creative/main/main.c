@@ -5,10 +5,7 @@
 #include <sys/time.h>
 #include "sntp.h"
 
-static TaskHandle_t notify_time_change = NULL;
-
-
-xSemaphoreHandle mutexSensor;
+//static TaskHandle_t notify_time_change = NULL;
 
 void x_task_dht()
 {
@@ -22,13 +19,33 @@ void x_task_dht()
         dht_data->temperature =  dht_buff[2];
         dht_data->humidity =  dht_buff[0];
         xQueueSend(dht_queue, &dht_data, 10);
-
-        vTaskDelay(5000 / portTICK_PERIOD_MS); 
+        vTaskDelay(2000 / portTICK_PERIOD_MS); 
 
     }
 }
 
-void x_task_buffer_push()
+void v_task_display_dht()
+{
+    dht_data_s dht_data_receive[1];
+    char temperature_buff[17];
+    char humidity_buff[16];
+    memset(temperature_buff, 0, 17);
+    memset(humidity_buff, 0, 16);
+
+    while (true)
+    {
+        if(xQueueReceive(dht_queue, &dht_data_receive, 10))
+        {
+            sprintf(temperature_buff, "Temperature %uC", dht_data_receive->temperature);
+            sprintf(humidity_buff, "Humidity %u%%", dht_data_receive->humidity);
+
+            display_str(temperature_buff, 5, 1, 7);
+            display_str(humidity_buff, 7, 1, 7);
+        }
+    }
+}
+
+/* void x_task_buffer_push()
 {
     dht_data_s dht_data_receive[1];
 
@@ -44,7 +61,7 @@ void x_task_buffer_push()
         }
     }
 }
-
+ */
 void app_main(void)
 {
     esp_err_t err;
@@ -62,11 +79,11 @@ void app_main(void)
     }
     esp_console_cmd_t cmd_led_on_conf = {
         .command = "led-on",
-        .func = &cmd_ledon,
+        .func = &cmd_led_on,
     };
      esp_console_cmd_t cmd_led_off_conf = {
         .command = "led-off",
-        .func = &cmd_ledoff,
+        .func = &cmd_led_off,
     };
     esp_console_cmd_t cmd_exit_conf = {
         .command = "exit",
@@ -101,6 +118,5 @@ void app_main(void)
     dht_queue = xQueueCreate( 1, sizeof( dht_data_s) );
 
     xTaskCreate(x_task_dht, "get dht data task", 2048, NULL, 1, NULL);
-    xTaskCreate(x_task_buffer_push, "push dht data tostatic buffer", 2048, NULL, 1, NULL);
-
+    xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, NULL);
 }

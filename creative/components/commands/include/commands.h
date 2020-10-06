@@ -14,8 +14,8 @@
 #include "timer_utils.h"
 #include "defines.h"
 
-int     cmd_ledon(int argc, char **argv);
-int     cmd_ledoff(int argc, char **argv);
+int     cmd_led_on(int argc, char **argv);
+int     cmd_led_off(int argc, char **argv);
 int     cmd_exit();
 
 #endif

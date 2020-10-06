@@ -59,7 +59,7 @@ void handle_led_off()
       }
 }
 
-int cmd_ledon(int argc, char** argv)
+int cmd_led_on(int argc, char** argv)
 {
       int8_t nerrors = 0;
 
@@ -93,7 +93,7 @@ int cmd_ledon(int argc, char** argv)
     return 0;
 }
 
-int cmd_ledoff(int argc, char** argv)
+int cmd_led_off(int argc, char** argv)
 {
     int8_t nerrors = 0;
 

@@ -27,6 +27,6 @@ typedef struct dht_data_struct {
 } dht_data_s;
 
 QueueHandle_t dht_queue;
-dht_data_s dht_log[1];
+//dht_data_s dht_log[1];
 
 #endif
