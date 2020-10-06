@@ -13,7 +13,7 @@
 #define DHT_POWER GPIO_NUM_2
 
 typedef struct dht_data_struct {
-    uint8_t   temperature;
+    int32_t   temperature;
     uint8_t   humidity;
     double    timestamp;
 } dht_data_s;

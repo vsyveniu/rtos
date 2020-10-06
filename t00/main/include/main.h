@@ -8,7 +8,6 @@
 #include "esp_err.h"
 #include <string.h>
 #include <stdio.h>
-#include "freertos/semphr.h"
 #include "defines.h"
 #include "power_up.h"
 #include "oled.h"
