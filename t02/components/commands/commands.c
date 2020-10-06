@@ -27,7 +27,7 @@ void dht_log_print()
         minutes = ((int)(time - dht_log[i].timestamp) - (3600 * hours)) / 60;
         seconds = (int)(time - dht_log[i].timestamp) - (3600 * hours) - (minutes * 60);
 
-        sprintf(str, "\n\rTemperature: %dС Humidity: %d%%     %d hours  %d  minutes  %d seconds ago",  dht_log[i].temperature, dht_log[i].humidity, hours, minutes, seconds);
+        sprintf(str, "\n\rTemperature: %uС Humidity: %d%%     %d hours  %d  minutes  %d seconds ago",  dht_log[i].temperature, dht_log[i].humidity, hours, minutes, seconds);
         uart_print_str(UART_NUMBER, str);
       }
     }
