@@ -20,6 +20,7 @@
 #include "oled.h"
 #include "timer_utils.h"
 #include "dht11.h"
+#include "freertos/semphr.h"
 #include "defines.h"
 
 #endif

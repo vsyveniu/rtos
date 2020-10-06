@@ -125,6 +125,35 @@ int cmd_led_off(int argc, char** argv)
     return 0;
 }
 
+int cmd_show_wheather(int argc, char** argv)
+{
+    if(argc > 1)
+    {
+      uart_print_str(UART_NUMBER, "\n\rType command without options. And don't fuck with me. No tricks. Or you will go to jail");
+
+      return 0;
+    }
+    dht_data_s dht_data_peek[1];
+
+
+    if (xSemaphoreTake(dht_peek_mutex, portMAX_DELAY))
+    {
+        xQueuePeek(dht_queue, &dht_data_peek, 10);
+
+        char dht_str[35];
+        memset(dht_str, 0, 35);
+        
+        sprintf(dht_str, "Temperature %dC  Humidity %u%%", dht_data_peek->temperature, dht_data_peek->humidity);
+
+        uart_print_str(UART_NUMBER, "\n\r");
+        uart_print_str(UART_NUMBER, dht_str);
+
+        xSemaphoreGive(dht_peek_mutex);
+    }
+
+    return 0;
+}
+
 int cmd_exit()
 {
     return 1;

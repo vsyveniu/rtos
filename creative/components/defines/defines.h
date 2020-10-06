@@ -6,6 +6,7 @@
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 #include "driver/timer.h"
+#include "freertos/semphr.h"
 #define LED_1                   27
 #define LED_2                   26
 #define LED_3                   33
@@ -22,11 +23,13 @@
 #define TIMER_SCALE             (TIMER_BASE_CLK / TIMER_DIVIDER)
 
 typedef struct dht_data_struct {
-    uint8_t   temperature;
+    int32_t   temperature;
     uint8_t   humidity;
 } dht_data_s;
 
 QueueHandle_t dht_queue;
+xSemaphoreHandle dht_peek_mutex;
+
 //dht_data_s dht_log[1];
 
 #endif
