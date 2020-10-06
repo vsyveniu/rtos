@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include "sntp.h"
 
+static TaskHandle_t notify_dht_change = NULL;
 static TaskHandle_t notify_time_change = NULL;
 
 void x_task_dht()
@@ -27,12 +28,46 @@ void x_task_dht()
             if(dht_data_peek->temperature != dht_data->temperature || dht_data_peek->humidity != dht_data->humidity)
             {
                 xQueueOverwrite(dht_queue, &dht_data);
-                xTaskNotify(notify_time_change, 1, eSetValueWithOverwrite);
+                xTaskNotify(notify_dht_change, 1, eSetValueWithOverwrite);
             }
             xSemaphoreGive(dht_peek_mutex);
         }
         vTaskDelay(2000 / portTICK_PERIOD_MS); 
 
+    }
+}
+
+void x_task_oled_time()
+{
+    uint8_t hours = 0;
+    uint8_t minutes = 0;
+    uint8_t seconds_show = 0;
+    uint32_t time_val = 0;
+    char *str;
+
+    while (true)
+    {
+        xTaskNotifyWait(0xffffffff, 0, &time_val, portMAX_DELAY);
+
+       if(time_val == 86400)
+       {
+           hours = 0;
+           minutes = 0;
+           seconds_show = 0;
+           timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+           timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  1 * TIMER_SCALE);
+       }
+       else
+       {
+            hours = (time_val) / 3600;
+            minutes = (time_val - (3600 * hours)) / 60;
+            seconds_show = time_val - (3600 * hours) - (minutes * 60);
+       }
+        str = make_time_str(hours, minutes, seconds_show);
+       if(display_str_fat_row_2(str, 0, 8, 1, 2)){
+           printf("%s\n", "string is too big");
+       }
+       free(str); 
     }
 }
 
@@ -59,23 +94,20 @@ void v_task_display_dht()
     }
 }
 
-/* void x_task_buffer_push()
+void IRAM_ATTR timer_intr_handle(void *param)
 {
-    dht_data_s dht_data_receive[1];
+    timer_spinlock_take(TIMER_GROUP_0);
+    uint64_t timer_val = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, TIMER_0);
+    timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, 0);
+    uint64_t next_alarm = timer_val + ( 1 * TIMER_SCALE);
+    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, TIMER_0, next_alarm);
+    timer_group_enable_alarm_in_isr(TIMER_GROUP_0, 0);
 
-    while (true)
-    {
-        if(xQueueReceive(dht_queue, &dht_data_receive, 10))
-        {
-            if(dht_log[0].temperature != dht_data_receive->temperature || dht_log[0].humidity != dht_data_receive->humidity)
-            {
-                dht_log[0].temperature = dht_data_receive->temperature;
-                dht_log[0].humidity = dht_data_receive->humidity;
-            }
-        }
-    }
+    xTaskNotifyFromISR(notify_time_change, timer_val / 1000000, eSetValueWithOverwrite, 0);
+    timer_spinlock_give(TIMER_GROUP_0);
 }
- */
+
+
 void app_main(void)
 {
     esp_err_t err;
@@ -114,6 +146,7 @@ void app_main(void)
     esp_console_cmd_register(&cmd_led_off_conf);
     esp_console_cmd_register(&cmd_show_wheather_conf);
     esp_console_cmd_register(&cmd_exit_conf);
+
 /* 
     struct timeval current_time;
 
@@ -135,11 +168,32 @@ void app_main(void)
     fill_oled();
     clear_oled();
 
+    timer_setup();
+
+
+    err = timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_intr_handle, (void *)0, ESP_INTR_FLAG_IRAM, NULL);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't initiate timers interrupt");
+    }
+
 
     dht_queue = xQueueCreate( 1, sizeof( dht_data_s) );
 
     dht_peek_mutex = xSemaphoreCreateMutex();
 
     xTaskCreate(x_task_dht, "get dht data task", 2048, NULL, 1, NULL);
-    xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, &notify_time_change);
+    xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, &notify_dht_change);
+    xTaskCreate(x_task_oled_time, "push dht data tostatic buffer", 4096, NULL, 1, &notify_time_change);
+
+    char *str;
+
+     str = make_time_str(0, 0, 0);
+       if(display_str_fat_row_2(str, 0, 8, 1, 2)){
+           printf("%s\n", "string is too big");
+       }
+    free(str); 
+    
+    timer_start(TIMER_GROUP_0, TIMER_0);
+
 }

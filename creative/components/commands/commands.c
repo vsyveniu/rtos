@@ -14,14 +14,17 @@ void handle_led_on(){
         gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_1, 1);
       }
+      
       if(second->count == 1){
         gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_2, 1);
       }
+
       if(third->count == 1){
         gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_3, 1);
       }
+
       if(all->count == 1)
       {
         gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
@@ -39,10 +42,12 @@ void handle_led_off()
         gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_1, 0);
       }
+
       if(second->count == 1){
         gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_2, 0);
       }
+
       if(third->count == 1){
         gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
         gpio_set_level(LED_3, 0);
