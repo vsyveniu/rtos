@@ -6,63 +6,8 @@ struct arg_lit *second = NULL;
 struct arg_lit *third = NULL;
 struct arg_lit *all = NULL;
 struct arg_rex *val = NULL;
+struct arg_rex *alarm_set = NULL;
 struct arg_end *end = NULL;
-
-void handle_led_on(){
-
-      if(first->count){
-        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_1, 1);
-      }
-      
-      if(second->count == 1){
-        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_2, 1);
-      }
-
-      if(third->count == 1){
-        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_3, 1);
-      }
-
-      if(all->count == 1)
-      {
-        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
-        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
-        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_1, 1);
-        gpio_set_level(LED_2, 2);
-        gpio_set_level(LED_3, 3);
-      }
-}
-
-void handle_led_off()
-{
-      if(first->count == 1){
-        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_1, 0);
-      }
-
-      if(second->count == 1){
-        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_2, 0);
-      }
-
-      if(third->count == 1){
-        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_3, 0);
-      }
-
-      if(all->count == 1)
-      {
-        gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);
-        gpio_set_direction(LED_2, GPIO_MODE_OUTPUT);
-        gpio_set_direction(LED_3, GPIO_MODE_OUTPUT);
-        gpio_set_level(LED_1, 0);
-        gpio_set_level(LED_2, 0);
-        gpio_set_level(LED_3, 0);
-      }
-}
 
 int cmd_led_on(int argc, char** argv)
 {
@@ -94,7 +39,7 @@ int cmd_led_on(int argc, char** argv)
 
     arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-    handle_led_on();
+    handle_led_on(first, second, third, all);
     return 0;
 }
 
@@ -126,7 +71,8 @@ int cmd_led_off(int argc, char** argv)
           return 0;
       }
 
-    handle_led_off();
+    handle_led_off(first, second, third, all);
+    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
     return 0;
 }
 
@@ -159,25 +105,6 @@ int cmd_show_wheather(int argc, char** argv)
     return 0;
 }
 
-void handle_time()
-{
-  uint64_t hours = 0;
-  uint64_t minutes = 0;
-  uint64_t seconds = 0;
-  uint64_t timer_val = 0;
-
-  hours = atoi(*val->sval);
-  *val->sval+=3;
-  minutes = atoi(*val->sval);
-  *val->sval+=3;
-  seconds = atoi(*val->sval);
-
-  timer_val = ((hours * 3600) + minutes * 60 + seconds) * 1000000;
-
-  timer_set_counter_value(TIMER_GROUP_0, TIMER_0, timer_val);
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  timer_val + ( 1 * TIMER_SCALE));
-
-}
 
 int cmd_time(int argc, char** argv){
    int nerrors = 0;
@@ -196,10 +123,34 @@ int cmd_time(int argc, char** argv){
         }
 
         arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
-        handle_time();
+
+        handle_time(val);
 
         return 0;
 }
+
+int cmd_alarm(int argc, char** argv){
+   int nerrors = 0;
+
+        void *argtable[] = {
+              alarm_set = arg_rex1("val", "value", "(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)", "<n>", 0, "the regular expression option"),
+              end = arg_end(20),
+        };
+
+        nerrors = arg_parse(argc,argv,argtable);
+        if(nerrors > 0)
+        {
+          uart_print_str(UART_NUMBER, "\n\rarguments line error");
+          arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+          return 0;
+        }
+
+        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+        handle_alarm(alarm_set);
+
+        return 0;
+}
+
 
 int cmd_exit()
 {

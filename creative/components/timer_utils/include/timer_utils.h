@@ -13,6 +13,5 @@
 #include "defines.h"
 
 char *make_time_str(uint8_t hours, uint8_t minutes, uint8_t seconds);
-int8_t timer_setup();
 
 #endif
