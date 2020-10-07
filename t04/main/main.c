@@ -30,7 +30,7 @@ void make_noise(int bits)
 
 
         sin_float *= (pow(2, bits)/2 - 1);
-
+                               
         if (bits == 16) {
             sample_val = 0;
             sample_val += (short)triangle_float;
