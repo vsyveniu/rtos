@@ -181,6 +181,7 @@ void app_main(void)
         .func = &cmd_noise_off,
     };
 
+
     esp_console_cmd_t cmd_show_wheather_conf = {
         .command = "wheather",
         .func = &cmd_show_wheather,
