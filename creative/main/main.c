@@ -172,6 +172,15 @@ void app_main(void)
         .func = &cmd_led_off,
     };
 
+    esp_console_cmd_t cmd_noise_on_conf = {
+        .command = "noise-on",
+        .func = &cmd_noise_on,
+    };
+     esp_console_cmd_t cmd_noise_off_conf = {
+        .command = "noise-off",
+        .func = &cmd_noise_off,
+    };
+
     esp_console_cmd_t cmd_show_wheather_conf = {
         .command = "wheather",
         .func = &cmd_show_wheather,
@@ -197,6 +206,8 @@ void app_main(void)
     esp_console_cmd_register(&cmd_show_wheather_conf);
     esp_console_cmd_register(&cmd_set_time_conf);
     esp_console_cmd_register(&cmd_set_alarm_conf);
+    esp_console_cmd_register(&cmd_noise_on_conf);
+    esp_console_cmd_register(&cmd_noise_off_conf);
     esp_console_cmd_register(&cmd_exit_conf);
 
 /* 
