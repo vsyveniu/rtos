@@ -29,6 +29,7 @@ typedef struct dht_data_struct {
 
 QueueHandle_t dht_queue;
 xSemaphoreHandle dht_peek_mutex;
+xSemaphoreHandle oled_mutex;
 
 //dht_data_s dht_log[1];
 

@@ -17,6 +17,7 @@
 int     cmd_led_on(int argc, char **argv);
 int     cmd_led_off(int argc, char **argv);
 int     cmd_show_wheather(int argc, char** argv);
+int     cmd_time(int argc, char** argv);
 int     cmd_exit();
 
 #endif
