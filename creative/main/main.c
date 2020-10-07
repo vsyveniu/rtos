@@ -63,11 +63,15 @@ void x_task_oled_time()
             minutes = (time_val - (3600 * hours)) / 60;
             seconds_show = time_val - (3600 * hours) - (minutes * 60);
        }
-        str = make_time_str(hours, minutes, seconds_show);
-       if(display_str_fat_row_2(str, 0, 8, 1, 2)){
-           printf("%s\n", "string is too big");
+       if(xSemaphoreTake(oled_mutex, portMAX_DELAY))
+       {
+            str = make_time_str(hours, minutes, seconds_show);
+            if(display_str_fat_row_2(str, 0, 8, 1, 2)){
+                printf("%s\n", "string is too big");
+            }
+            xSemaphoreGive(oled_mutex);
+            free(str); 
        }
-       free(str); 
     }
 }
 
@@ -87,10 +91,13 @@ void v_task_display_dht()
     
         sprintf(temperature_buff, "Temperature %dC", dht_data_receive->temperature);
         sprintf(humidity_buff, "Humidity %u%%", dht_data_receive->humidity);
-
-        display_str(temperature_buff, 5, 1, 7);
-        display_str(humidity_buff, 7, 1, 7);
-        dht_changed = 0;
+        if(xSemaphoreTake(oled_mutex, portMAX_DELAY))
+        {
+            display_str(temperature_buff, 5, 1, 7);
+            display_str(humidity_buff, 7, 1, 7);
+            dht_changed = 0;
+            xSemaphoreGive(oled_mutex);
+        }
     }
 }
 
@@ -137,6 +144,11 @@ void app_main(void)
         .func = &cmd_show_wheather,
     };
 
+    esp_console_cmd_t cmd_set_time_conf = {
+        .command = "time",
+        .func = &cmd_time,
+    };
+
     esp_console_cmd_t cmd_exit_conf = {
         .command = "exit",
         .func = &cmd_exit,
@@ -145,6 +157,7 @@ void app_main(void)
     esp_console_cmd_register(&cmd_led_on_conf);
     esp_console_cmd_register(&cmd_led_off_conf);
     esp_console_cmd_register(&cmd_show_wheather_conf);
+    esp_console_cmd_register(&cmd_set_time_conf);
     esp_console_cmd_register(&cmd_exit_conf);
 
 /* 
@@ -181,6 +194,7 @@ void app_main(void)
     dht_queue = xQueueCreate( 1, sizeof( dht_data_s) );
 
     dht_peek_mutex = xSemaphoreCreateMutex();
+    oled_mutex = xSemaphoreCreateMutex();
 
     xTaskCreate(x_task_dht, "get dht data task", 2048, NULL, 1, NULL);
     xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, &notify_dht_change);
