@@ -9,9 +9,9 @@
 #define UART_RX_PIN             16
 #define EN_AMP                  23
 #define PI                      (3.14159265)
-#define SAMPLE_RATE             (44100)
-#define WAVE_FREQ_HZ            (1000)
-#define SAMPLE_PER_CYCLE        (SAMPLE_RATE/WAVE_FREQ_HZ)
-
+#define SAMPLE_RATE             (16000)
+#define BITS_PER_SAMPLE         (16)
+#define DMA_BUF_COUNT           (2)
+#define DMA_BUF_LEN             (1024)
 
 #endif

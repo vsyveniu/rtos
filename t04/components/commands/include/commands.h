@@ -13,7 +13,8 @@
 #include "driver/ledc.h"
 #include "defines.h"
 
-int     cmd_time(int argc, char **argv);
+int     cmd_noise_on(int argc, char **argv);
+int     cmd_noise_off(int argc, char **argv);
 int     cmd_exit();
 
 #endif
