@@ -92,6 +92,7 @@ void handle_alarm(struct arg_rex *alarm_set)
   uint64_t minutes = 0;
   uint64_t seconds = 0;
   uint64_t alarm_val = 0;
+  UBaseType_t  is_filled = 0;
 
   hours = atoi(*alarm_set->sval);
   *alarm_set->sval+=3;
@@ -99,19 +100,20 @@ void handle_alarm(struct arg_rex *alarm_set)
   *alarm_set->sval+=3;
   seconds = atoi(*alarm_set->sval);
 
-  alarm_val = ((hours * 3600) + minutes * 60 + seconds) * 1000000;
-
-  printf("%llu\n", alarm_val);
+  alarm_val = ((hours * 3600) + minutes * 60 + seconds);
 
   double time = 0;
 
-  timer_get_counter_time_sec(TIMER_GROUP_0, 1, &time);
+  is_filled = uxQueueMessagesWaiting(alarm_queue);
 
-  printf("%llu\n", (uint64_t)time * 1000000);
-  
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, alarm_val);
+  if(!is_filled)
+  {
+    xQueueSend(alarm_queue, &alarm_val, 10);
+  }
+  else
+  {
+    xQueueOverwrite(alarm_queue, &alarm_val);
+  }
 
-  timer_enable_intr(TIMER_GROUP_0, TIMER_1);
-  
 }
 

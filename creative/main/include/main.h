@@ -23,5 +23,7 @@
 #include "freertos/semphr.h"
 #include "defines.h"
 #include "commands_handle.h"
+#include "i2snoise.h"
+#include "esp_err.h"
 
 #endif

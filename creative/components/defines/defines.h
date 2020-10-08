@@ -21,6 +21,10 @@
 #define OLED_ADDR               0x3c
 #define TIMER_DIVIDER           80
 #define TIMER_SCALE             (TIMER_BASE_CLK / TIMER_DIVIDER)
+#define SAMPLE_RATE             (16000)
+#define BITS_PER_SAMPLE         (16)
+#define DMA_BUF_COUNT           (2)
+#define DMA_BUF_LEN             (1024)
 
 typedef struct dht_data_struct {
     int32_t   temperature;
@@ -28,6 +32,7 @@ typedef struct dht_data_struct {
 } dht_data_s;
 
 QueueHandle_t dht_queue;
+QueueHandle_t alarm_queue;
 xSemaphoreHandle dht_peek_mutex;
 xSemaphoreHandle oled_mutex;
 //static TaskHandle_t notify_alarm_ring = NULL;

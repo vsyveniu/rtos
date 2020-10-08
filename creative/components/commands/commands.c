@@ -10,6 +10,57 @@ struct arg_rex *val = NULL;
 struct arg_rex *alarm_set = NULL;
 struct arg_end *end = NULL;
 
+void register_cmnd_set()
+{
+     esp_console_cmd_t cmd_led_on_conf = {
+        .command = "led-on",
+        .func = &cmd_led_on,
+    };
+     esp_console_cmd_t cmd_led_off_conf = {
+        .command = "led-off",
+        .func = &cmd_led_off,
+    };
+
+    esp_console_cmd_t cmd_noise_on_conf = {
+        .command = "noise-on",
+        .func = &cmd_noise_on,
+    };
+     esp_console_cmd_t cmd_noise_off_conf = {
+        .command = "noise-off",
+        .func = &cmd_noise_off,
+    };
+
+    esp_console_cmd_t cmd_show_wheather_conf = {
+        .command = "wheather",
+        .func = &cmd_show_wheather,
+    };
+
+    esp_console_cmd_t cmd_set_time_conf = {
+        .command = "time",
+        .func = &cmd_time,
+    };
+
+    esp_console_cmd_t cmd_set_alarm_conf = {
+        .command = "alarm",
+        .func = &cmd_alarm,
+    };
+
+    esp_console_cmd_t cmd_exit_conf = {
+        .command = "exit",
+        .func = &cmd_exit,
+    };
+
+    esp_console_cmd_register(&cmd_led_on_conf);
+    esp_console_cmd_register(&cmd_led_off_conf);
+    esp_console_cmd_register(&cmd_show_wheather_conf);
+    esp_console_cmd_register(&cmd_set_time_conf);
+    esp_console_cmd_register(&cmd_set_alarm_conf);
+    esp_console_cmd_register(&cmd_noise_on_conf);
+    esp_console_cmd_register(&cmd_noise_off_conf);
+    esp_console_cmd_register(&cmd_exit_conf);
+}
+
+
 int cmd_led_on(int argc, char** argv)
 {
       int8_t nerrors = 0;

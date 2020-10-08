@@ -23,6 +23,7 @@
 #include "freertos/semphr.h"
 #include "defines.h"
 #include "argtable3/argtable3.h"
+#include "driver/i2s.h"
 
 void IRAM_ATTR timer_alarm_handle(void *param);
 void handle_alarm(struct arg_rex *alarm_set);
