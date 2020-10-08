@@ -1,5 +1,6 @@
 #include "oled.h"
 #include "font6x8.h"
+#include "font8x16.h"
 
 int32_t init_oled()
 {
@@ -103,6 +104,95 @@ void write_page(uint8_t *data, uint8_t page)
     i2c_cmd_link_delete(cmd);
 }
 
+void create_fat_row_load(uint8_t *arr, char *str, int len, int font_weight, int font_h)
+{
+
+    int start = 0;
+    int w = font_weight;
+    int i = 0;
+    int margin = (128 - strlen(str) * w) / 2;
+    i = margin;
+    for (int k = 0; k < len; k++)
+    {
+        start = (str[k] - 32) * 16 + font_h;
+        w = font_weight;
+        while (i < 128)
+        {
+            if (w == 0)
+            {
+                break;
+            }
+            if (w <= 1)
+            {
+                arr[i] = 0x00;
+            }
+            arr[i] = font8x16[start];
+            start++;
+            w--;
+            i++;
+        }
+    }
+}
+
+int display_str_fat_row_2(char *str, int appear_speed, int font_weight, int page_start, int pages_num)
+{
+    uint8_t arr[8][128];
+    int chars_len;
+
+    if(strlen(str) > 128){
+        return (1);
+    }
+
+    chars_len = 128 / font_weight;  // 6 for longer words(no 1 bit margin between chars
+                            		// and 128/6 = 20 chars will fit in row), 7 for
+                            		// shorter(1 bit margin between chars). Other values
+                            		// will screw up entire string
+    char bunchs[8][chars_len];
+
+    for (uint8_t y = 0; y < pages_num; y++)
+    {
+        for (uint8_t x = 0; x < 128; x++)
+        {
+            arr[y][x] = 0x00;
+        }
+    }
+
+    for (uint8_t y = 0; y < pages_num; y++)
+    {
+        for (uint8_t x = 0; x < chars_len; x++)
+        {
+            bunchs[y][x] = 0x00;
+        }
+    }
+
+    for(int i = 0; i < pages_num; i++)
+    {
+        strcpy(bunchs[i], str);
+    }
+
+   int font_h = 0;    
+    for (uint8_t y = 0; y < pages_num; y++)
+    {
+        if( y % 2 != 0)
+        {
+            font_h = 8;
+        }
+        create_fat_row_load(arr[y], bunchs[y], strlen(bunchs[y]), 8, font_h);
+    }
+
+    for(int8_t y = 0; y < pages_num; y++)
+    {
+        for (uint8_t x = 0; x < 128; x++)
+        {
+            write_page(&arr[y][x], page_start);
+            vTaskDelay(appear_speed / portTICK_PERIOD_MS);
+        }
+        page_start++;
+    }
+
+    return 0;
+}
+
 void create_load(uint8_t *arr, char *str, int len, int font_weight)
 {
     int start = 0;
@@ -150,7 +240,7 @@ void display_str(char *str, int page, int appear_speed, int font_weight)
     {
         for (uint8_t x = 0; x < 128; x++)
         {
-            arr[y][x] = 0b00000000;
+            arr[y][x] = 0x00;
         }
     }
 

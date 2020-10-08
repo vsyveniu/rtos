@@ -3,9 +3,11 @@
 #include "driver/periph_ctrl.h"
 #include "soc/timer_group_struct.h"
 #include <sys/time.h>
-#include "sntp.h"
+#include "audio_table.h"
 
+static TaskHandle_t notify_dht_change = NULL;
 static TaskHandle_t notify_time_change = NULL;
+static TaskHandle_t notify_alarm_ring = NULL;
 
 void x_task_dht()
 {
@@ -27,12 +29,51 @@ void x_task_dht()
             if(dht_data_peek->temperature != dht_data->temperature || dht_data_peek->humidity != dht_data->humidity)
             {
                 xQueueOverwrite(dht_queue, &dht_data);
-                xTaskNotify(notify_time_change, 1, eSetValueWithOverwrite);
+                xTaskNotify(notify_dht_change, 1, eSetValueWithOverwrite);
             }
             xSemaphoreGive(dht_peek_mutex);
         }
         vTaskDelay(2000 / portTICK_PERIOD_MS); 
 
+    }
+}
+
+void x_task_oled_time()
+{
+    uint8_t hours = 0;
+    uint8_t minutes = 0;
+    uint8_t seconds_show = 0;
+    uint32_t time_val = 0;
+    char *str;
+
+    while (true)
+    {
+        xTaskNotifyWait(0xffffffff, 0, &time_val, portMAX_DELAY);
+
+       if(time_val == 86400)
+       {
+           hours = 0;
+           minutes = 0;
+           seconds_show = 0;
+           timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
+            timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);
+           timer_set_alarm_value(TIMER_GROUP_0, TIMER_0,  1 * TIMER_SCALE);
+       }
+       else
+       {
+            hours = (time_val) / 3600;
+            minutes = (time_val - (3600 * hours)) / 60;
+            seconds_show = time_val - (3600 * hours) - (minutes * 60);
+       }
+       if(xSemaphoreTake(oled_mutex, portMAX_DELAY))
+       {
+            str = make_time_str(hours, minutes, seconds_show);
+            if(display_str_fat_row_2(str, 0, 8, 1, 2)){
+                printf("%s\n", "string is too big");
+            }
+            xSemaphoreGive(oled_mutex);
+            free(str); 
+       }
     }
 }
 
@@ -52,30 +93,77 @@ void v_task_display_dht()
     
         sprintf(temperature_buff, "Temperature %dC", dht_data_receive->temperature);
         sprintf(humidity_buff, "Humidity %u%%", dht_data_receive->humidity);
-
-        display_str(temperature_buff, 5, 1, 7);
-        display_str(humidity_buff, 7, 1, 7);
-        dht_changed = 0;
+        if(xSemaphoreTake(oled_mutex, portMAX_DELAY))
+        {
+            display_str(temperature_buff, 5, 1, 7);
+            display_str(humidity_buff, 7, 1, 7);
+            dht_changed = 0;
+            xSemaphoreGive(oled_mutex);
+        }
     }
 }
 
-/* void x_task_buffer_push()
+void v_task_alarm_ring()
 {
-    dht_data_s dht_data_receive[1];
+    uint32_t timer_val = 0;
+    uint64_t alarm_val = 0;
+    size_t i2s_bytes_write = 0;
 
     while (true)
     {
-        if(xQueueReceive(dht_queue, &dht_data_receive, 10))
+        xTaskNotifyWait(0xffffffff, 0, &timer_val, portMAX_DELAY);
+        if(xQueuePeek(alarm_queue, &alarm_val, 10))
         {
-            if(dht_log[0].temperature != dht_data_receive->temperature || dht_log[0].humidity != dht_data_receive->humidity)
+            if(timer_val == alarm_val)
             {
-                dht_log[0].temperature = dht_data_receive->temperature;
-                dht_log[0].humidity = dht_data_receive->humidity;
+                i2s_start(0);
+                i2s_write(0, audio_table, sizeof(audio_table), &i2s_bytes_write, 100);
+                i2s_stop(0);
             }
         }
     }
 }
- */
+
+void v_task_make_noise()
+{
+    size_t i2s_bytes_write = 0;
+
+    while (true)
+    {
+      i2s_write(0, audio_table, sizeof(audio_table), &i2s_bytes_write, 100);
+    }
+
+}
+
+void IRAM_ATTR timer_intr_handle(void *param)
+{
+    timer_spinlock_take(TIMER_GROUP_0);
+    uint64_t timer_val = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, TIMER_0);
+    timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, 0);
+    uint64_t next_alarm = timer_val + ( 1 * TIMER_SCALE);
+    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, TIMER_0, next_alarm);
+    timer_group_enable_alarm_in_isr(TIMER_GROUP_0, 0);
+
+    xTaskNotifyFromISR(notify_time_change, timer_val / 1000000, eSetValueWithOverwrite, 0);
+    xTaskNotifyFromISR(notify_alarm_ring, timer_val / 1000000, eSetValueWithOverwrite, 0);
+    timer_spinlock_give(TIMER_GROUP_0);
+}
+
+
+void IRAM_ATTR timer_alarm_handle(void *param)
+{
+    timer_spinlock_take(TIMER_GROUP_0);
+
+    uint64_t timer_val = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, TIMER_1);
+    timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
+    uint64_t next_alarm = timer_val  + ( 10 * TIMER_SCALE);
+    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, TIMER_1, next_alarm);
+    timer_group_enable_alarm_in_isr(TIMER_GROUP_0, TIMER_1);
+
+    xTaskNotifyFromISR(notify_alarm_ring, 1, eSetValueWithOverwrite, 0);
+    timer_spinlock_give(TIMER_GROUP_0);
+}
+
 void app_main(void)
 {
     esp_err_t err;
@@ -91,55 +179,70 @@ void app_main(void)
         printf("%s\n", "couldn't init uart console. Have to reboot");
         esp_restart();
     }
-    esp_console_cmd_t cmd_led_on_conf = {
-        .command = "led-on",
-        .func = &cmd_led_on,
-    };
-     esp_console_cmd_t cmd_led_off_conf = {
-        .command = "led-off",
-        .func = &cmd_led_off,
-    };
-
-    esp_console_cmd_t cmd_show_wheather_conf = {
-        .command = "wheather",
-        .func = &cmd_show_wheather,
-    };
-
-    esp_console_cmd_t cmd_exit_conf = {
-        .command = "exit",
-        .func = &cmd_exit,
-    };
-
-    esp_console_cmd_register(&cmd_led_on_conf);
-    esp_console_cmd_register(&cmd_led_off_conf);
-    esp_console_cmd_register(&cmd_show_wheather_conf);
-    esp_console_cmd_register(&cmd_exit_conf);
-/* 
-    struct timeval current_time;
-
-    sntp_set_sync_mode(SNTP_SYNC_MODE_IMMED);
-
-    while (true)
-    {
-        gettimeofday(&current_time, NULL);
-    printf("seconds : %ld\n  micro seconds : %ld\n",
-        current_time.tv_sec, current_time.tv_usec);
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    } */
+    
+    register_cmnd_set();
 
     err = init_oled();
-    if(err != ESP_OK){
+    if(err != ESP_OK)
+    {
         printf("%s\n", "couldn't initiate oled");
     }
-    fill_oled();
     clear_oled();
 
+    timer_config_t clock_timer_conf = {
+		.counter_en = false,
+		.counter_dir = TIMER_COUNT_UP,
+        .alarm_en = TIMER_ALARM_EN,
+        .intr_type = TIMER_INTR_LEVEL,
+		.auto_reload = false,
+		.divider = TIMER_DIVIDER,
+    };
 
+    err = timer_init(TIMER_GROUP_0, TIMER_0, &clock_timer_conf);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't initiate timer");
+    }
+
+    err = timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1 * TIMER_SCALE);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't set timer alarm");
+    }
+
+    err = timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_intr_handle, (void *)0, ESP_INTR_FLAG_IRAM, NULL);
+    if(err != ESP_OK)
+    {
+        printf("%s\n", "couldn't initiate timers interrupt");
+    }
+
+    err = i2s_setup();
+    if(err != ESP_OK){
+        printf("%s\n", esp_err_to_name(err));
+    }
+    
     dht_queue = xQueueCreate( 1, sizeof( dht_data_s) );
-
+    alarm_queue = xQueueCreate( 1, sizeof(uint64_t) );
+    
     dht_peek_mutex = xSemaphoreCreateMutex();
+    oled_mutex = xSemaphoreCreateMutex();
 
     xTaskCreate(x_task_dht, "get dht data task", 2048, NULL, 1, NULL);
-    xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, &notify_time_change);
+    xTaskCreate(v_task_display_dht, "display himidity and temperature on change", 2048, NULL, 1, &notify_dht_change);
+    xTaskCreate(x_task_oled_time, "push dht data tostatic buffer", 4096, NULL, 1, &notify_time_change);
+    xTaskCreate(v_task_alarm_ring, "play alarm tone", 2048, NULL, 1, &notify_alarm_ring);
+    xTaskCreate(v_task_make_noise, "play some music", 2048, NULL, 1, NULL);
+
+    char *str;
+
+    str = make_time_str(0, 0, 0);
+
+    if(display_str_fat_row_2(str, 0, 8, 1, 2))
+    {
+        printf("%s\n", "string is too big");
+    }
+    free(str); 
+    
+    timer_start(TIMER_GROUP_0, TIMER_0);
+ 
 }

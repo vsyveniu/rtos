@@ -13,6 +13,7 @@
 #include <stdarg.h>
 
 void display_str(char *str, int page, int appear_speed, int font_weight);
+int display_str_fat_row_2(char *str, int appear_speed, int font_weight, int page_start, int pages_num);
 void create_load(uint8_t *arr, char *str, int len, int font_weight);
 void write_page(uint8_t *data, uint8_t page);
 int32_t init_oled();

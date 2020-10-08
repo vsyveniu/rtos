@@ -1,5 +1,5 @@
-#ifndef TIMER_UTILS_H
-# define TIMER_UTILS_H
+#ifndef I2SNOISE_H
+# define I2SNOISE_H
 
 #include <stdio.h>
 #include <string.h>
@@ -11,7 +11,8 @@
 #include "freertos/timers.h"
 #include "driver/timer.h"
 #include "defines.h"
+#include "driver/i2s.h"
 
-char *make_time_str(uint8_t hours, uint8_t minutes, uint8_t seconds);
+int i2s_setup();
 
 #endif
