@@ -37,7 +37,7 @@ int cmd_time(int argc, char** argv)
         nerrors = arg_parse(argc,argv,argtable);
         if(nerrors > 0)
         {
-          uart_print_str(UART_NUMBER, "\n\rarguments line error\n");
+          uart_print_str(UART_NUMBER, "\n\rarguments line error");
           arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
           return 0;
         }

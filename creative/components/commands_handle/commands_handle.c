@@ -83,11 +83,8 @@ void handle_time(struct arg_rex *val)
 
 }
 
-
 void handle_alarm(struct arg_rex *alarm_set)
 {
-  esp_err_t err;
-
   uint64_t hours = 0;
   uint64_t minutes = 0;
   uint64_t seconds = 0;
@@ -101,8 +98,6 @@ void handle_alarm(struct arg_rex *alarm_set)
   seconds = atoi(*alarm_set->sval);
 
   alarm_val = ((hours * 3600) + minutes * 60 + seconds);
-
-  double time = 0;
 
   is_filled = uxQueueMessagesWaiting(alarm_queue);
 

@@ -5,8 +5,6 @@
 #include "audio_table.h"
 #include "driver/i2s.h"
 
-static TaskHandle_t notify_noise = NULL;
-
 
 void v_task_make_noise()
 {
@@ -22,10 +20,6 @@ void v_task_make_noise()
 
 void app_main(void)
 {
-  esp_err_t err;
-  
-    /* gpio_set_direction(EN_AMP, GPIO_MODE_OUTPUT);
-    gpio_set_level(EN_AMP, 1); */
     dac_output_enable(DAC_CHANNEL_1);
 
     uart_console_init();

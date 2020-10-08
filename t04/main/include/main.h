@@ -9,8 +9,6 @@
 #include "esp_err.h"
 #include <string.h>
 #include <stdio.h>
-#include "driver/ledc.h"
-#include "freertos/semphr.h"
 #include "driver/uart.h"
 #include "esp_system.h"
 #include "esp_console.h"
@@ -19,7 +17,6 @@
 #include "uart_console.h"
 #include "driver/i2s.h"
 #include "driver/dac.h"
-#include "esp_spiffs.h"
 #include "defines.h"
 
 #endif

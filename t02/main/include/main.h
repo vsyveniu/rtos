@@ -18,6 +18,5 @@
 #include "uart_utils_funcs.h"
 #include "uart_console.h"
 #include "dht11.h"
-#include "defines.h"
 
 #endif

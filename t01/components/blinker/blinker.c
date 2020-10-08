@@ -1,16 +1,5 @@
 #include "blinker.h"
 
-/* void led_on(int led_num)
-{
-	gpio_set_direction(led_num, GPIO_MODE_OUTPUT);
-    gpio_set_level(led_num, 1);
-}
-
-void led_off(int led_num)
-{
-    gpio_set_level(led_num, 0);
-} */
-
 void ledc_channel_setup(ledc_timer_t timer_num, int32_t frequency, ledc_channel_t channel, int gpio){
 	
 	ledc_timer_config_t ledc_timer = {

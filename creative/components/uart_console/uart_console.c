@@ -60,10 +60,10 @@ void uart_event_task(void *pvParams){
             {
               console_ret = esp_console_run(str, &ret);
               if(console_ret == ESP_ERR_INVALID_ARG){
-                uart_print_str(UART_NUMBER, "\n\rBitch please! What am i supposed to do?");
+                uart_print_str(UART_NUMBER, "\n\rWhat am i supposed to do?");
               }
               if(console_ret == ESP_ERR_NOT_FOUND){
-                uart_print_str(UART_NUMBER, "\n\rCommand not found. Try to type not such a crap next time");
+                uart_print_str(UART_NUMBER, "\n\rCommand not found");
               }
               memset(str, '\0', 256);
               memset(buff, 0, 256);
@@ -73,22 +73,13 @@ void uart_event_task(void *pvParams){
               if(ret == 1)
               {
                 is_first = 1;
-                uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL again\n\r");
+                uart_print_str(UART_NUMBER, "\n\rType anything to enter a REPL again\n\r");
                 vTaskSuspend( NULL );
               }
             }
          
             else if (rxlen > 0)
             { 
-                /*   if( buff[0] == 127)
-                {
-                  uart_write_bytes(UART_NUMBER, buff, 3);
-                  //uart_write_bytes(UART_NUMBER, "\r", 1);
-                  // uart_write_bytes(UART_NUMBER, str, 256);
-                  i--;
-                  str[i] = 0;
-                  str[i - 1] = 0;
-                } */
               if(buff[0] != 127)
               {
                 j = 0;
@@ -157,7 +148,7 @@ int8_t uart_console_init()
     xTaskCreate(cmd_instance_task, "cmd_instance_task", 4096, NULL, 2, &xcmdHandle);
     xTaskCreate(uart_event_task, "uart_event_task", 2048, xcmdHandle, 2, NULL);
     
-    uart_print_str(UART_NUMBER, "\n\rType any shit to enter a REPL \n\r");
+    uart_print_str(UART_NUMBER, "\n\rType anything to enter a REPL \n\r");
 
     return ESP_OK;
 }

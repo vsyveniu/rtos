@@ -132,7 +132,7 @@ int cmd_show_wheather(int argc, char** argv)
 {
     if(argc > 1)
     {
-      uart_print_str(UART_NUMBER, "\n\rType command without options. And don't fuck with me. No tricks. Or you will go to jail");
+      uart_print_str(UART_NUMBER, "\n\rType command without options");
 
       return 0;
     }
@@ -207,7 +207,7 @@ int cmd_noise_on(int argc, char **argv)
 {
     if(argc > 1)
     {
-      uart_print_str(UART_NUMBER, "\n\rType command without options. And don't fuck with me. No tricks. Or you will go to jail");
+      uart_print_str(UART_NUMBER, "\n\rType command without options");
 
       return 0;
     }
@@ -221,7 +221,7 @@ int cmd_noise_off(int argc, char **argv)
 {
     if(argc > 1)
     {
-      uart_print_str(UART_NUMBER, "\n\rType command without options. And don't fuck with me. No tricks. Or you will go to jail");
+      uart_print_str(UART_NUMBER, "\n\rType command without options");
 
       return 0;
     }

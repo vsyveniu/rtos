@@ -14,7 +14,6 @@
 #include "defines.h"
 #include "blinker.h"
 
-
 int     cmd_handle(int argc, char **argv);
 int     cmd_exit();
 
