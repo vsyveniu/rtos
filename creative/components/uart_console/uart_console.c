@@ -1,4 +1,5 @@
 #include "uart_console.h"
+#include <ctype.h>
 
 static QueueHandle_t uart0_queue;
 xSemaphoreHandle mutexInput;
@@ -39,7 +40,7 @@ void uart_event_task(void *pvParams){
             ret = 0;
             console_ret = 0;      
             rxlen = uart_read_bytes(UART_NUM_1, buff, 256, 20 / portTICK_RATE_MS);
-
+            
             if((rxlen == 3 || rxlen == 6) && buff[0] == 27)
             {
               if(buff[2] == 68 && i > 0)
@@ -80,27 +81,30 @@ void uart_event_task(void *pvParams){
          
             else if (rxlen > 0)
             { 
-              if(buff[0] != 127)
-              {
-                j = 0;
-                if(rxlen + strlen(str) > 255 && strlen(str) < 255)
+              if(isprint(buff[0]))
+              { 
+                if(buff[0] != 127)
                 {
-                  uart_write_bytes(UART_NUMBER, buff, 255 - strlen(str));
-                  while(i < 255)
+                  j = 0;
+                  if(rxlen + strlen(str) > 255 && strlen(str) < 255)
                   {
-                    str[i] = buff[j];
-                    i++;
-                    j++;
-                  }                              
-                }
-                else if(i < 255)
-                {
-                  uart_write_bytes(UART_NUMBER, buff, rxlen);
-                  while (j < rxlen)
+                    uart_write_bytes(UART_NUMBER, buff, 255 - strlen(str));
+                    while(i < 255)
+                    {
+                      str[i] = buff[j];
+                      i++;
+                      j++;
+                    }                              
+                  }
+                  else if(i < 255)
                   {
-                    str[i] = buff[j];
-                    i++;
-                    j++;              
+                    uart_write_bytes(UART_NUMBER, buff, rxlen);
+                    while (j < rxlen)
+                    {
+                      str[i] = buff[j];
+                      i++;
+                      j++;              
+                    }
                   }
                 }
               }

@@ -30,5 +30,6 @@ void handle_alarm(struct arg_rex *alarm_set);
 void handle_time(struct arg_rex *val);
 void handle_led_on(struct arg_lit *first, struct arg_lit *second, struct arg_lit *third, struct arg_lit *all);
 void handle_led_off(struct arg_lit *first, struct arg_lit *second, struct arg_lit *third, struct arg_lit *all);
+void handle_help();
 
 #endif

@@ -23,6 +23,7 @@ int     cmd_time(int argc, char** argv);
 int     cmd_alarm(int argc, char** argv);
 int     cmd_noise_on(int argc, char **argv);
 int     cmd_noise_off(int argc, char **argv);
+int     cmd_help(int argc, char **argv);
 int     cmd_exit();
 
 #endif
